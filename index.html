@@ -22,6 +22,9 @@
       <a href="#diagnostics">Диагностика</a>
       <a href="#final">Финал</a>
     </nav>
+    <button class="mobile-course-menu-btn" id="mobileCourseMenuBtn" type="button" aria-label="Открыть меню курса" aria-expanded="false" aria-controls="mobileCourseMenu">
+      <span aria-hidden="true">☰</span><strong>Разделы</strong>
+    </button>
     <button class="sound-toggle" id="soundToggle" type="button" aria-label="Отключить звуки" aria-pressed="true" title="Звуки ответов">
       <span id="soundIcon" aria-hidden="true">🔊</span>
     </button>
@@ -30,6 +33,40 @@
       <span id="progressText">0 / 16</span>
     </button>
   </header>
+  <div class="mobile-course-menu-backdrop" id="mobileCourseMenuBackdrop" hidden></div>
+  <aside class="mobile-course-menu" id="mobileCourseMenu" aria-hidden="true" aria-label="Навигация по курсу">
+    <div class="mobile-course-menu-head">
+      <div>
+        <span>Регрессия · навигация</span>
+        <strong>Куда перейти?</strong>
+      </div>
+      <button type="button" id="mobileCourseMenuClose" aria-label="Закрыть меню">×</button>
+    </div>
+    <div class="mobile-course-menu-progress">
+      <span>Пройдено</span>
+      <strong id="mobileMenuProgress">0 / 16</strong>
+    </div>
+    <nav class="mobile-course-menu-list">
+      <a href="#intuition" data-chapter-link="1"><span>01</span><strong>Связь X и Y</strong><em>увидеть направление</em></a>
+      <a href="#line-game" data-chapter-link="2"><span>02</span><strong>OLS руками</strong><em>подогнать линию</em></a>
+      <a href="#coefficients" data-chapter-link="3"><span>03</span><strong>Коэффициент β</strong><em>прочитать смысл</em></a>
+      <a href="#outlier" data-chapter-link="4"><span>04</span><strong>Выбросы</strong><em>увидеть влияние точки</em></a>
+      <a href="#residuals" data-chapter-link="5"><span>05</span><strong>Остатки</strong><em>найти ошибку модели</em></a>
+      <a href="#diagnostics" data-chapter-link="6"><span>06</span><strong>Диагностика</strong><em>прочитать график ошибок</em></a>
+      <a href="#model-duel" data-chapter-link="7"><span>07</span><strong>Сравнение моделей</strong><em>выбрать лучшую</em></a>
+      <a href="#prediction" data-chapter-link="8"><span>08</span><strong>Прогноз Ŷ</strong><em>посчитать по формуле</em></a>
+      <a href="#roles" data-chapter-link="9"><span>09</span><strong>Y, X и контроль</strong><em>разложить по ролям</em></a>
+      <a href="#dummy" data-chapter-link="10"><span>10</span><strong>Dummy 0/1</strong><em>понять разницу групп</em></a>
+      <a href="#multiple" data-chapter-link="11"><span>11</span><strong>Множественная регрессия</strong><em>«при прочих равных»</em></a>
+      <a href="#significance" data-chapter-link="12"><span>12</span><strong>p-value</strong><em>сигнал против H₀</em></a>
+      <a href="#vif" data-chapter-link="13"><span>13</span><strong>VIF</strong><em>переменные-близнецы</em></a>
+      <a href="#research" data-chapter-link="14"><span>14</span><strong>Исследовательская модель</strong><em>собрать самому</em></a>
+      <a href="#data-lab" data-chapter-link="15"><span>15</span><strong>Мини-SPSS</strong><em>запустить регрессию</em></a>
+      <a href="#final" data-chapter-link="16"><span>16</span><strong>Финальный практикум</strong><em>20 новых задач</em></a>
+    </nav>
+    <button class="mobile-course-menu-top" id="mobileMenuTop" type="button">↑ В начало курса</button>
+  </aside>
+
 
   <main id="top">
     <section class="starter-strip shell reveal" aria-label="Как работать с курсом">
