@@ -72,6 +72,8 @@
     if(ch===8){
       $('#predictX').value=4; renderPredictionMachine();
       $('#predictAnswer').value='';
+      $('#predictAnswer').disabled=false;
+      $('#checkPrediction').disabled=false;
       $('#predictionFeedback').textContent=''; $('#predictionFeedback').className='feedback';
       toast('Задание на прогноз сброшено'); return;
     }
@@ -84,6 +86,7 @@
         const labels={y:'Что предсказываем?',x:'Главный предиктор',control:'Контроль'};
         slot.querySelector('strong').textContent=labels[role];
       });
+      document.querySelectorAll('#variableBank .variable-chip,.role-slot').forEach(x=>x.disabled=false);
       $('#selectedVariable').textContent='Сначала выбери карточку переменной.';
       $('#rolesFeedback').textContent=''; $('#rolesFeedback').className='feedback';
       toast('Роли очищены'); return;
@@ -260,12 +263,44 @@
     toast.t = setTimeout(() => el.classList.remove('show'), 1800);
   }
 
+  function showNextBlockButton(chapter){
+    const section=document.querySelector('[data-chapter="'+chapter+'"]');
+    if(!section) return;
+    const holder=section.classList.contains('chapter')?section:section.querySelector('.chapter');
+    if(!holder) return;
+    let wrap=holder.querySelector('.next-block-wrap');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.className='next-block-wrap';
+      const n=Number(chapter);
+      wrap.innerHTML=n<TOTAL
+        ? '<div><span>Готово</span><strong>Можно двигаться дальше</strong><p>Следующий раздел продолжит эту идею.</p></div><button class="btn primary next-block-btn" type="button">Дальше по курсу ↓</button>'
+        : '<div><span>Готово</span><strong>Финал завершён</strong><p>Перейди к итогам курса и своему прогрессу.</p></div><button class="btn primary next-block-btn" type="button">К итогам курса ↓</button>';
+      holder.append(wrap);
+      wrap.querySelector('.next-block-btn').addEventListener('click',()=>{
+        if(n<TOTAL){
+          const next=document.querySelector('[data-chapter="'+(n+1)+'"]');
+          if(next) next.scrollIntoView({behavior:'smooth',block:'start'});
+        }else{
+          const mastery=document.querySelector('.mastery');
+          if(mastery) mastery.scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      });
+    }
+    wrap.classList.add('show');
+  }
+
+  function restoreNextButtons(){
+    state.completed.forEach(ch=>showNextBlockButton(Number(ch)));
+  }
+
   function complete(chapter) {
     const before = state.completed.size;
     state.completed.add(String(chapter));
     localStorage.setItem(NS + ':completed', JSON.stringify([...state.completed]));
     updateProgress();
     if (state.completed.size > before) toast('Раздел ' + chapter + ' пройден');
+    showNextBlockButton(chapter);
     if (state.completed.size === TOTAL && before < TOTAL) launchConfetti();
   }
 
@@ -635,6 +670,9 @@
     $$('.model-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     if (m.best) {
+      $('.model-card').forEach(c=>{c.style.pointerEvents='none';c.classList.add('locked-choice');});
+      el.classList.remove('locked-choice');
+      el.classList.add('selected','correct-model');
       setFeedback($('#modelFeedback'),true,'Верно. Для поставленной цели — прогноз на новых данных — здесь ключевой ориентир: минимальный RMSE на test-наборе.');
       complete(7);
     } else {
@@ -681,6 +719,8 @@
   function checkPrediction(){
     const v = Number(String($('#predictAnswer').value).replace(',','.'));
     if (v === 30){
+      $('#predictAnswer').disabled=true;
+      $('#checkPrediction').disabled=true;
       setFeedback($('#predictionFeedback'),true,'Верно. 12 + 3×6 = 30. Ты только что вручную сделал прогноз по регрессии.');
       complete(8);
     } else {
@@ -712,7 +752,10 @@
       setFeedback($('#rolesFeedback'),ok,ok
         ? 'Да. Y — результат экзамена, X — часы подготовки, а курс обучения — дополнительный контроль.'
         : 'Проверь логику вопроса: что мы хотим предсказать? Что является главным интересующим фактором? Что лишь дополнительно учитываем?');
-      if(ok) complete(9);
+      if(ok){
+        document.querySelectorAll('#variableBank .variable-chip,.role-slot').forEach(x=>x.disabled=true);
+        complete(9);
+      }
     });
   }
 
@@ -832,7 +875,11 @@
       setFeedback($('#researchFeedback'),ok,ok
         ? 'Модель логична: результат экзамена — Y, часы подготовки — главный X, а сон или курс — разумный контроль. Это уже мышление исследователя.'
         : 'Собери модель по вопросу: результат экзамена должен быть Y, часы подготовки — главным X. Для контроля лучше взять сон или курс обучения, а не любимый кофе.');
-      if(ok) complete(14);
+      if(ok){
+        document.querySelectorAll('#researchPool button,#research .research-slots button').forEach(x=>x.disabled=true);
+        $('#checkResearch').disabled=true;
+        complete(14);
+      }
     });
   }
 
@@ -1702,6 +1749,26 @@
     $('#quizFeedback').className = 'feedback dark-feedback';
   }
 
+  function quizWrongHint(q){
+    const hints={
+      'Расчёт':'Подставь X в формулу. Сначала выполни умножение, затем прибавь свободный член. Я не показываю готовый результат.',
+      'Остаток':'Вспомни порядок: остаток = фактическое Y − прогноз Ŷ. Проверь знак и пересчитай самостоятельно.',
+      'Dummy':'Для D=1 к базовой части добавляется коэффициент при D. Выполни подстановку, но не ищи ответ в подсказке.',
+      'Множественная регрессия':'Раздели формулу на части: константа, вклад первого X и вклад второго X. Сначала посчитай каждое произведение отдельно.',
+      'Коэффициент':'Спроси себя: что произойдёт с прогнозом Y, если X увеличится ровно на одну единицу?',
+      'R²':'R² говорит о вариации Y, описанной моделью, а не о проценте точных наблюдений и не о причинности.',
+      'p-value':'Сравни p с α. Не превращай p-value в вероятность истинности эффекта.',
+      'Мультиколлинеарность':'Ищи две переменные, которые почти измеряют одну и ту же величину.',
+      'Y / X / контроль':'Сначала ответь: что объясняем? Это Y. Затем: связь какого фактора интересует? Это X.',
+      'Причинность':'Отдели статистическую связь от утверждения о причине.',
+      'График связи':'Смотри на общий наклон всего облака, а не на отдельные точки.',
+      'Диагностика':'Ищи форму всего облака остатков: дугу, воронку или случайный разброс.',
+      'Выброс и leverage':'Ищи точку, которая дальше всего от основной массы по горизонтальной оси X.',
+      'Выбор модели':'Для прогноза новых данных сравни test RMSE: меньше означает меньшую типичную ошибку.'
+    };
+    return hints[q.kind]||'Вернись к правилу из соответствующего раздела и попробуй ещё раз. Готовый ответ подсказка не раскрывает.';
+  }
+
   function answerQuiz(i,btn) {
     if (!state.quiz.active || !$('#quizNext').disabled) return;
     const q = state.quiz.order[state.quiz.index], ok = i === q.right;
@@ -1716,7 +1783,7 @@
       setFeedback($('#quizFeedback'),true,'Верно. '+q.why);
       $('#quizNext').disabled = false;
     } else {
-      setFeedback($('#quizFeedback'),false,'Пока нет. '+q.why+' Попробуй ещё раз — правильный вариант не раскрывается заранее.');
+      setFeedback($('#quizFeedback'),false,'Пока нет. '+quizWrongHint(q)+' Попробуй ещё раз.');
     }
   }
 
@@ -1734,7 +1801,7 @@
       setFeedback($('#quizFeedback'),true,'Верно. '+q.why);
       $('#quizNext').disabled=false;
     } else {
-      setFeedback($('#quizFeedback'),false,'Пока неверно. '+q.why+' Пересчитай и попробуй снова.');
+      setFeedback($('#quizFeedback'),false,'Пока неверно. '+quizWrongHint(q)+' Пересчитай и попробуй снова.');
       input.select();
     }
   }
@@ -1751,7 +1818,7 @@
       $('#quizNext').disabled=false;
     } else {
       el.style.opacity='.25';
-      setFeedback($('#quizFeedback'),false,'Не эта точка. '+q.why+' Попробуй другую.');
+      setFeedback($('#quizFeedback'),false,'Не эта точка. '+quizWrongHint(q)+' Попробуй другую.');
     }
   }
 
@@ -1767,7 +1834,7 @@
       $('#quizNext').disabled=false;
     }else{
       btn.classList.add('wrong');
-      setFeedback($('#quizFeedback'),false,'Эта модель ошибается на test сильнее. '+q.why+' Сравни RMSE ещё раз.');
+      setFeedback($('#quizFeedback'),false,'Эта модель не подходит. '+quizWrongHint(q)+' Сравни варианты ещё раз.');
     }
   }
 
@@ -1866,6 +1933,7 @@
   function init() {
     bind();
     updateProgress();
+    restoreNextButtons();
     initReveal();
     initLessonGates();
     addPracticeRestartButtons();
