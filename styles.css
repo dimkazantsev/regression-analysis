@@ -80,3 +80,6 @@ main{padding-top:72px}.hero{min-height:760px;display:grid;grid-template-columns:
   .next-block-wrap{align-items:stretch;flex-direction:column}
   .next-block-wrap .btn{width:100%}
 }
+
+.chapter-head .eyebrow{display:none}
+.chapter-head>div{gap:0}
