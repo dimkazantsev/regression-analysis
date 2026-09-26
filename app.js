@@ -1036,7 +1036,7 @@
   function initLessonGates(){
     document.querySelectorAll('[data-chapter]').forEach(section=>{
       const chapter=section.dataset.chapter;
-      const holder=section.querySelector('.chapter');
+      const holder=section.classList.contains('chapter') ? section : section.querySelector('.chapter');
       if(!holder || holder.querySelector('.lesson-gate')) return;
       const head=holder.querySelector('.chapter-head');
       if(!head) return;
@@ -1061,7 +1061,7 @@
     gate.classList.add('lesson-done');
     const btn=gate.querySelector('.lesson-unlock');
     if(btn){btn.textContent='Объяснение пройдено ✓';btn.disabled=true;}
-    const holder=section.querySelector('.chapter');
+    const holder=section.classList.contains('chapter') ? section : section.querySelector('.chapter');
     let after=false, first=null;
     [...holder.children].forEach(child=>{
       if(child===gate){after=true;return;}
