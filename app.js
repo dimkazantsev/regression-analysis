@@ -577,7 +577,7 @@
     drawScatter($('#residualChart'),pts,{
       w:900,h:480,line:reg,residuals:true,clickable:true,pad:55
     });
-    $('#residualChart circle').forEach(c => {
+    $$('#residualChart circle').forEach(c => {
       c.style.pointerEvents='auto';
       c.addEventListener('click', () => answerResidual(Number(c.dataset.index),c));
     });
@@ -591,7 +591,7 @@
     if (i === state.residualTarget) {
       circle.setAttribute('r','9');
       circle.setAttribute('fill','#188342');
-      $('#residualChart circle').forEach(c=>{c.style.pointerEvents='none';});
+      $$('#residualChart circle').forEach(c=>{c.style.pointerEvents='none';});
       setFeedback($('#residualFeedback'),true,'Точно. Остаток — вертикальная разница между наблюдаемым Y и предсказанием линии.');
       complete(5);
     } else {
@@ -671,10 +671,10 @@
   }
 
   function answerDuel(m,el) {
-    $$('.model-card').forEach(c => c.classList.remove('selected'));
+    $$$('.model-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
     if (m.best) {
-      $('.model-card').forEach(c=>{c.style.pointerEvents='none';c.classList.add('locked-choice');});
+      $$('.model-card').forEach(c=>{c.style.pointerEvents='none';c.classList.add('locked-choice');});
       el.classList.remove('locked-choice');
       el.classList.add('selected','correct-model');
       setFeedback($('#modelFeedback'),true,'Верно. Для поставленной цели — прогноз на новых данных — здесь ключевой ориентир: минимальный RMSE на test-наборе.');
