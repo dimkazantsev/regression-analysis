@@ -476,10 +476,33 @@
 
 
   const glossary = {
-    prediction:{title:'Прогноз (Ŷ)',text:'Это значение Y, которое рассчитала модель. Оно не обязано точно совпасть с реальным наблюдением.'},
-    multicollinearity:{title:'Мультиколлинеарность',text:'Ситуация, когда два или больше предиктора несут очень похожую информацию. Тогда отдельные коэффициенты могут становиться нестабильными и труднее интерпретироваться.'},
+    regression:{title:'Регрессия',text:'Способ описать среднюю связь между результатом Y и одной или несколькими переменными X, а также получать прогнозы.'},
+    y:{title:'Y — зависимая переменная',text:'То, что мы хотим объяснить или предсказать. Например, балл экзамена.'},
+    x:{title:'X — предиктор',text:'Переменная, с помощью которой мы объясняем или предсказываем Y. Например, часы подготовки.'},
+    prediction:{title:'Прогноз (Ŷ)',text:'Значение Y, которое рассчитала модель. Оно не обязано точно совпасть с реальным наблюдением.'},
+    intercept:{title:'Свободный член β₀',text:'Прогноз Y, когда все X равны нулю. Иногда он содержательно важен, а иногда ноль X вообще не имеет практического смысла.'},
+    coefficient:{title:'Коэффициент β',text:'Число при переменной. Оно показывает, насколько в среднем меняется прогноз Y при увеличении этой переменной на одну единицу, при прочих равных.'},
+    beta1:{title:'β₁ — коэффициент наклона',text:'Показывает направление и величину среднего изменения прогнозируемого Y при изменении X на одну единицу.'},
+    ols:{title:'OLS / МНК',text:'Метод наименьших квадратов. Он выбирает линию так, чтобы сумма квадратов вертикальных ошибок прогноза была минимальной.'},
+    sse:{title:'SSE',text:'Сумма квадратов остатков. Чем она меньше для одних и тех же данных, тем ближе линия к наблюдениям.'},
+    r2:{title:'R²',text:'Доля вариации Y, которую описывает модель в рассматриваемых данных. R² не является доказательством причинности и не гарантирует хороший прогноз на новых данных.'},
     residual:{title:'Остаток',text:'Ошибка прогноза для одного наблюдения: реальное Y минус предсказанное Ŷ.'},
-    coefficient:{title:'Коэффициент',text:'Число при переменной. Оно показывает, насколько меняется прогноз Y при изменении этой переменной на одну единицу, при прочих равных.'}
+    outlier:{title:'Выброс',text:'Наблюдение, заметно отличающееся от основной массы данных. Не каждый выброс вреден, но его влияние нужно проверять.'},
+    leverage:{title:'Leverage — рычаг',text:'Насколько необычно положение наблюдения по X. Точка далеко от остальных по X может сильно тянуть регрессионную линию.'},
+    dummy:{title:'Dummy-переменная',text:'Переменная-код 0/1 для категорий. 0 — базовая категория, 1 — сравниваемая.'},
+    control:{title:'Контрольная переменная',text:'Дополнительный фактор, который включают в модель, чтобы сравнивать значения главного X при одинаковом значении этого фактора.'},
+    heteroskedasticity:{title:'Гетероскедастичность',text:'Ситуация, когда разброс ошибок модели меняется при разных значениях X или прогноза.'},
+    nonlinearity:{title:'Нелинейность',text:'Связь, которую прямая линия описывает плохо: например, зависимость имеет форму дуги.'},
+    rmse:{title:'RMSE',text:'Средний типичный размер ошибки прогноза в единицах Y. Для одинаковой задачи меньший test RMSE обычно означает лучший прогноз на новых данных.'},
+    adjustedr2:{title:'Скорректированный R²',text:'Версия R², которая учитывает число предикторов и не награждает модель так щедро просто за добавление новых X.'},
+    pvalue:{title:'p-value',text:'При нулевой гипотезе и предпосылках теста — вероятность получить такие же или более экстремальные данные. Это НЕ вероятность истинности гипотезы.'},
+    null:{title:'Нулевая гипотеза',text:'Рабочая гипотеза для статистического теста, часто формулируемая как отсутствие эффекта или коэффициент, равный нулю.'},
+    multicollinearity:{title:'Мультиколлинеарность',text:'Ситуация, когда несколько предикторов несут очень похожую информацию. Тогда отдельные коэффициенты сложнее стабильно оценить.'},
+    vif:{title:'VIF',text:'Показатель того, насколько один предиктор объясняется другими предикторами. Большие значения могут указывать на проблему дублирования информации.'},
+    association:{title:'Ассоциация',text:'Статистическая связь: значения переменных систематически меняются вместе. Ассоциация сама по себе не доказывает причинность.'},
+    causality:{title:'Причинность',text:'Утверждение, что изменение X вызывает изменение Y. Для такого вывода одной регрессии на наблюдательных данных обычно недостаточно.'},
+    noise:{title:'Шум',text:'Часть различий в Y, которую выбранные X не объясняют: случайность, измерительные ошибки и неучтённые факторы.'},
+    sample:{title:'Выборка',text:'Набор наблюдений, на которых мы строим и проверяем модель.'}
   };
 
   function renderPredictionMachine(){
@@ -491,20 +514,20 @@
     const v = Number(String($('#predictAnswer').value).replace(',','.'));
     if (v === 30){
       setFeedback($('#predictionFeedback'),true,'Верно. 12 + 3×6 = 30. Ты только что вручную сделал прогноз по регрессии.');
-      complete(16);
+      complete(8);
     } else {
       setFeedback($('#predictionFeedback'),false,'Почти. Сначала умножь коэффициент при X на значение X: 3×6=18. Затем добавь свободный член 12.');
     }
   }
 
   function initRolesGame(){
-    $('#variableBank .variable-chip').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#variableBank .variable-chip').forEach(b=>b.addEventListener('click',()=>{
       state.selectedRoleVar=b.dataset.var;
-      $('#variableBank .variable-chip').forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('#variableBank .variable-chip').forEach(x=>x.classList.remove('selected'));
       b.classList.add('selected');
       $('#selectedVariable').textContent='Выбрано: '+b.textContent+'. Теперь нажми на роль справа.';
     }));
-    $('.role-slot').forEach(slot=>slot.addEventListener('click',()=>{
+    document.querySelectorAll('.role-slot').forEach(slot=>slot.addEventListener('click',()=>{
       if(!state.selectedRoleVar){ toast('Сначала выбери переменную слева'); return; }
       const role=slot.dataset.role;
       state.roleAssignments[role]=state.selectedRoleVar;
@@ -512,7 +535,7 @@
       slot.classList.add('filled');
       slot.querySelector('strong').textContent=src ? src.textContent : state.selectedRoleVar;
       state.selectedRoleVar=null;
-      $('#variableBank .variable-chip').forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('#variableBank .variable-chip').forEach(x=>x.classList.remove('selected'));
       $('#selectedVariable').textContent='Можно назначить следующую переменную.';
     }));
     $('#checkRoles').addEventListener('click',()=>{
@@ -526,14 +549,14 @@
   }
 
   function initDummy(){
-    $('.dummy-choice').forEach(b=>b.addEventListener('click',()=>{
-      $('.dummy-choice').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.dummy-choice').forEach(b=>b.addEventListener('click',()=>{
+      document.querySelectorAll('.dummy-choice').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
       $('#dummyPrediction').textContent=50+8*Number(b.dataset.d);
     }));
-    $('#dummyAnswers button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#dummyAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='diff';
-      $('#dummyAnswers button').forEach(x=>x.disabled=true);
+      document.querySelectorAll('#dummyAnswers button').forEach(x=>x.disabled=true);
       b.classList.add(ok?'correct':'wrong');
       $('#dummyAnswers [data-answer="diff"]').classList.add('correct');
       setFeedback($('#dummyFeedback'),ok,ok
@@ -554,9 +577,9 @@
     $('#studySlider').addEventListener('input',renderMultiple);
     $('#sleepSlider').addEventListener('input',renderMultiple);
     renderMultiple();
-    $('#multipleAnswers button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#multipleAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='four';
-      $('#multipleAnswers button').forEach(x=>x.disabled=true);
+      document.querySelectorAll('#multipleAnswers button').forEach(x=>x.disabled=true);
       b.classList.add(ok?'correct':'wrong');
       $('#multipleAnswers [data-answer="four"]').classList.add('correct');
       setFeedback($('#multipleFeedback'),ok,ok
@@ -569,7 +592,7 @@
   function renderP(){
     const p=Number($('#pSlider').value)/1000;
     $('#pValueOut').textContent=p.toFixed(3);
-    $('.lamp').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.lamp').forEach(x=>x.classList.remove('active'));
     let text='';
     if(p<.05){ $('#lampGreen').classList.add('active'); text='Есть статистический сигнал при пороге 0,05';}
     else if(p<.10){ $('#lampAmber').classList.add('active'); text='Пограничная зона при условном пороге 0,05';}
@@ -580,9 +603,9 @@
   function initP(){
     $('#pSlider').addEventListener('input',renderP);
     renderP();
-    $('#pAnswers button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#pAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='wrong';
-      $('#pAnswers button').forEach(x=>x.disabled=true);
+      document.querySelectorAll('#pAnswers button').forEach(x=>x.disabled=true);
       b.classList.add(ok?'correct':'wrong');
       $('#pAnswers [data-answer="wrong"]').classList.add('correct');
       setFeedback($('#pFeedback'),ok,ok
@@ -593,9 +616,9 @@
   }
 
   function initVif(){
-    $('#twinOptions button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#twinOptions button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='income-salary';
-      $('#twinOptions button').forEach(x=>{x.disabled=true;x.classList.remove('correct','wrong')});
+      document.querySelectorAll('#twinOptions button').forEach(x=>{x.disabled=true;x.classList.remove('correct','wrong')});
       b.classList.add(ok?'correct':'wrong');
       $('#twinOptions [data-answer="income-salary"]').classList.add('correct');
       $('#vifValue').textContent=ok?'12.4':'2.1';
@@ -608,13 +631,13 @@
   }
 
   function initResearch(){
-    $('#researchPool button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#researchPool button').forEach(b=>b.addEventListener('click',()=>{
       state.selectedResearchVar=b.dataset.var;
-      $('#researchPool button').forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('#researchPool button').forEach(x=>x.classList.remove('selected'));
       b.classList.add('selected');
       $('#researchHint').textContent='Выбрано: '+b.textContent+'. Теперь назначь роль.';
     }));
-    $('#research .research-slots button').forEach(slot=>slot.addEventListener('click',()=>{
+    document.querySelectorAll('#research .research-slots button').forEach(slot=>slot.addEventListener('click',()=>{
       if(!state.selectedResearchVar){ toast('Сначала выбери переменную сверху'); return; }
       const key=slot.dataset.slot;
       state.researchAssignments[key]=state.selectedResearchVar;
@@ -622,7 +645,7 @@
       slot.classList.add('filled');
       slot.querySelector('strong').textContent=src?src.textContent:state.selectedResearchVar;
       state.selectedResearchVar=null;
-      $('#researchPool button').forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('#researchPool button').forEach(x=>x.classList.remove('selected'));
       $('#researchHint').textContent='Хорошо. Назначь следующую роль.';
     }));
     $('#checkResearch').addEventListener('click',()=>{
@@ -643,7 +666,7 @@
       $('#simpleModeToggle').setAttribute('aria-pressed',on?'true':'false');
       $('#simpleModeToggle').textContent='Объяснять совсем просто: '+(on?'ВКЛ':'ВЫКЛ');
     });
-    $('[data-term]').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('[data-term]').forEach(b=>b.addEventListener('click',()=>{
       const t=glossary[b.dataset.term];
       if(!t) return;
       $('#termTitle').textContent=t.title;
@@ -667,7 +690,7 @@
     renderLabTable();
     $('#labResults').hidden = true;
     $('#labConclusionFeedback').textContent='';
-    $('#labConclusionAnswers button').forEach(b=>{b.disabled=false;b.classList.remove('correct','wrong')});
+    document.querySelectorAll('#labConclusionAnswers button').forEach(b=>{b.disabled=false;b.classList.remove('correct','wrong')});
   }
 
   function renderLabTable(){
@@ -751,9 +774,9 @@
     makeLabData();
     $('#regenDataset').addEventListener('click',makeLabData);
     $('#runLabRegression').addEventListener('click',runLabRegression);
-    $('#labConclusionAnswers button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#labConclusionAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='causality';
-      $('#labConclusionAnswers button').forEach(x=>x.disabled=true);
+      document.querySelectorAll('#labConclusionAnswers button').forEach(x=>x.disabled=true);
       b.classList.add(ok?'correct':'wrong');
       $('#labConclusionAnswers [data-answer="causality"]').classList.add('correct');
       setFeedback($('#labConclusionFeedback'),ok,ok
@@ -841,7 +864,7 @@
     $('#quizStart').style.display = 'inline-flex';
     $('#quizStart').textContent = 'Пройти ещё раз';
     state.quiz.active = false;
-    complete(8);
+    complete(16);
   }
 
   function launchConfetti() {
