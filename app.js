@@ -291,11 +291,23 @@
     $$('.reveal').forEach(el => obs.observe(el));
   }
 
-  const heroBase = Array.from({length:42},(_,i)=>{
-    const xz = (i-20.5)/12.2;
-    const ez = seededNoise(i+905)*1.65 + seededNoise(i+1205)*.35;
-    return {xz,ez};
-  });
+  function standardize(values){
+    const mean=values.reduce((a,b)=>a+b,0)/values.length;
+    const centered=values.map(v=>v-mean);
+    const sd=Math.sqrt(centered.reduce((a,b)=>a+b*b,0)/centered.length)||1;
+    return centered.map(v=>v/sd);
+  }
+
+  const heroBase = (() => {
+    const rawX=Array.from({length:42},(_,i)=>i);
+    const zx=standardize(rawX);
+    let ze=standardize(Array.from({length:42},(_,i)=>
+      Math.sin((i+1)*1.73)+0.55*Math.cos((i+1)*2.41)+0.25*Math.sin((i+1)*.61)
+    ));
+    const dot=zx.reduce((sum,v,i)=>sum+v*ze[i],0)/zx.reduce((sum,v)=>sum+v*v,0);
+    ze=standardize(ze.map((v,i)=>v-dot*zx[i]));
+    return zx.map((xz,i)=>({xz,ez:ze[i]}));
+  })();
 
   function renderHero() {
     const rho = Number($('#rhoSlider').value);
@@ -303,23 +315,29 @@
     $('#rhoOut').textContent = rho.toFixed(2);
     $('#noiseOut').textContent = spread;
 
-    const residualWeight = Math.sqrt(Math.max(0,1-rho*rho));
-    const raw = heroBase.map(p => ({
-      x: 50 + 23*p.xz,
-      y: 50 + spread*(rho*p.xz + residualWeight*p.ez*.62)
+    const residualWeight=Math.sqrt(Math.max(0,1-rho*rho));
+    const visualScale=spread*.62;
+    const points=heroBase.map(p=>({
+      x:50+22*p.xz,
+      y:50+visualScale*(rho*p.xz+residualWeight*p.ez)
     }));
-    const points = raw.map(p => ({
-      x: clamp(p.x,4,96),
-      y: clamp(p.y,4,96)
-    }));
-    const reg = regression(points);
-    drawScatter($('#heroChart'), points, {
+    const reg=regression(points);
+
+    drawScatter($('#heroChart'),points,{
       w:600,h:360,line:reg,pad:38,
       fixed:{xmin:0,xmax:100,ymin:0,ymax:100},
       smooth:true
     });
-    $('#heroBeta').textContent = fmt(reg.b1,2);
-    $('#heroR2').textContent = clamp(reg.r2,0,1).toFixed(2);
+
+    const mx=points.reduce((a,p)=>a+p.x,0)/points.length;
+    const my=points.reduce((a,p)=>a+p.y,0)/points.length;
+    const sx=Math.sqrt(points.reduce((a,p)=>a+(p.x-mx)**2,0)/points.length);
+    const sy=Math.sqrt(points.reduce((a,p)=>a+(p.y-my)**2,0)/points.length);
+    const corr=points.reduce((a,p)=>a+(p.x-mx)*(p.y-my),0)/points.length/(sx*sy);
+
+    $('#heroBeta').textContent=fmt(reg.b1,2);
+    $('#heroR2').textContent=clamp(reg.r2,0,1).toFixed(2);
+    $('#rhoOut').textContent=corr.toFixed(2);
   }
 
   function newIntuition() {
