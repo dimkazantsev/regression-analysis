@@ -6,7 +6,19 @@
   <meta name="theme-color" content="#f5f7fb" />
   <title>Регрессия — интерактивная лаборатория</title>
   <meta name="description" content="Интерактивный учебный тренажёр по регрессионному анализу: визуальные эксперименты, задачи, диагностика моделей и квизы." />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20260927-03" />
+  <style id="mobile-nav-critical">
+    [hidden]{display:none!important}
+    @media(max-width:980px){
+      .mobile-course-menu-btn{display:flex!important;width:40px!important;height:40px!important;padding:0!important;align-items:center!important;justify-content:center!important;border:0!important;border-radius:12px!important;background:#111722!important;color:#fff!important}
+      .mobile-course-menu-btn strong{display:none!important}
+      .mobile-course-menu-backdrop{position:fixed!important;inset:0!important;z-index:9998!important;background:rgba(8,12,18,.42)!important}
+      .mobile-course-menu{position:fixed!important;z-index:9999!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100%!important;height:82vh!important;overflow:hidden!important;background:#f7f8fb!important;border-radius:22px 22px 0 0!important;padding:14px!important;box-shadow:0 -20px 60px rgba(0,0,0,.22)!important;transform:none!important}
+      .mobile-course-menu-list{display:grid!important;overflow:auto!important;gap:4px!important}
+      .mobile-course-menu-list a{display:grid!important;grid-template-columns:36px 1fr auto!important;align-items:center!important;gap:10px!important;min-height:46px!important;padding:8px 10px!important;border-radius:12px!important;text-decoration:none!important}
+      .mobile-course-menu-list a em{display:none!important}
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -34,7 +46,7 @@
     </button>
   </header>
   <div class="mobile-course-menu-backdrop" id="mobileCourseMenuBackdrop" hidden></div>
-  <aside class="mobile-course-menu" id="mobileCourseMenu" aria-hidden="true" aria-label="Навигация по курсу">
+  <aside class="mobile-course-menu" id="mobileCourseMenu" hidden aria-hidden="true" aria-label="Навигация по курсу">
     <div class="mobile-course-menu-head">
       <div>
         <span>Регрессия · навигация</span>
@@ -669,7 +681,7 @@
   </button>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <canvas id="confetti" aria-hidden="true"></canvas>
-  <script src="lesson-content.js"></script>
-  <script src="app.js"></script>
+  <script src="lesson-content.js?v=20260927-03"></script>
+  <script src="app.js?v=20260927-03"></script>
 </body>
 </html>
