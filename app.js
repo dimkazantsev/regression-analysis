@@ -1840,6 +1840,12 @@
     $('#quizNext').addEventListener('click',nextQuiz);
 
     $('#progressPill').addEventListener('click',() => $('.mastery').scrollIntoView({behavior:'smooth'}));
+
+    const backToTop=$('#backToTop');
+    const updateBackToTop=()=>backToTop.classList.toggle('show',window.scrollY>520);
+    window.addEventListener('scroll',updateBackToTop,{passive:true});
+    updateBackToTop();
+    backToTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
     $('#resetProgress').addEventListener('click',() => {
       localStorage.removeItem(NS+':completed');
       state.completed.clear();
