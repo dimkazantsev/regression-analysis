@@ -1436,28 +1436,125 @@
   }
 
 
-  const quizBank = [
-    {type:'number',kind:'Расчёт',q:'Модель: Ŷ = 10 + 2X. Чему равен прогноз при X = 4?',answer:18,tolerance:0,why:'Сначала 2×4 = 8, затем 10+8 = 18.'},
-    {type:'choice',kind:'OLS',q:'Что именно минимизирует обычный МНК (OLS)?',a:['Сумму абсолютных значений X','Сумму квадратов остатков','Количество переменных','R²'],right:1,why:'OLS выбирает коэффициенты так, чтобы сумма квадратов вертикальных ошибок была минимальной.'},
-    {type:'choice',kind:'Коэффициент',q:'β₁ = −3. Какое чтение корректно?',a:['X объясняет 3% Y','При +1 к X прогноз Y в среднем меняется на −3','Y всегда падает ровно на 3','R² = −3'],right:1,why:'β₁ описывает среднее изменение прогнозируемого Y при увеличении X на одну единицу.'},
-    {type:'number',kind:'Остаток',q:'Факт Y = 78, прогноз Ŷ = 70. Чему равен остаток e = Y − Ŷ?',answer:8,tolerance:0,why:'78−70 = +8. Положительный знак означает, что факт выше прогноза.'},
-    {type:'choice',kind:'R²',q:'R² = 0,72. Что это означает?',a:['72% наблюдений предсказаны точно','Модель описывает около 72% вариации Y в этой выборке','Причинность доказана на 72%','Ошибка модели равна 28'],right:1,why:'R² — доля вариации Y, описанная моделью в данных.'},
-    {type:'scatter',kind:'График связи',q:'Посмотри на облако точек. Какое направление линейной связи здесь заметнее?',pattern:'positive',a:['Положительное','Отрицательное','Почти отсутствует'],right:0,why:'Облако в среднем поднимается слева направо.'},
-    {type:'scatter',kind:'График связи',q:'Какое направление линейной связи показано на графике?',pattern:'negative',a:['Положительное','Отрицательное','Почти отсутствует'],right:1,why:'При росте X значения Y в среднем снижаются.'},
-    {type:'residual',kind:'Диагностика',q:'Что показывает этот график остатков?',pattern:'nonlinear',a:['Нелинейность','Гетероскедастичность','Явной проблемы не видно'],right:0,why:'Дуга в остатках означает, что прямая линия пропускает криволинейную структуру.'},
-    {type:'residual',kind:'Диагностика',q:'Что показывает этот график остатков?',pattern:'hetero',a:['Нелинейность','Гетероскедастичность','Идеальную модель'],right:1,why:'Разброс ошибок увеличивается — это характерная воронка.'},
-    {type:'outlier',kind:'Выброс и leverage',q:'Какая точка потенциально имеет самый высокий leverage?',why:'Самая далёкая по X точка имеет наибольший рычаг влияния.'},
-    {type:'choice',kind:'Dummy',q:'Модель Ŷ = 50 + 8D, где D=0 для группы A и D=1 для группы B. Что означает коэффициент 8?',a:['Группа B в среднем выше группы A на 8 единиц','Группа B выше на 8%','Вероятность группы B равна 8','R² = 8'],right:0,why:'При переключении D с 0 на 1 прогноз увеличивается на 8 единиц Y.'},
-    {type:'number',kind:'Dummy',q:'В модели Ŷ = 50 + 8D чему равен прогноз для группы B, если D=1?',answer:58,tolerance:0,why:'50 + 8×1 = 58.'},
-    {type:'choice',kind:'Множественная регрессия',q:'Ŷ = 30 + 4·подготовка + 2·сон. Что означает коэффициент 4 при подготовке?',a:['При +1 часу подготовки прогноз выше на 4 при одинаковом сне','Нужно прибавлять 4+2=6','Сон не имеет значения','Это 4%'],right:0,why:'Другие включённые переменные мысленно фиксируются.'},
-    {type:'number',kind:'Множественная регрессия',q:'Ŷ = 30 + 4·подготовка + 2·сон. Подготовка = 3 часа, сон = 7 часов. Чему равен прогноз?',answer:56,tolerance:0,why:'30 + 4×3 + 2×7 = 30 + 12 + 14 = 56.'},
-    {type:'choice',kind:'p-value',q:'Исследователь получил p = 0,03. Какой вывод корректнее?',a:['Есть статистический сигнал против H₀ при α=0,05, но это не вероятность истинности эффекта','Эффект истинный с вероятностью 97%','Эффект причинный','R² равно 0,97'],right:0,why:'p-value относится к данным при H₀, а не к вероятности истинности эффекта.'},
-    {type:'choice',kind:'Мультиколлинеарность',q:'Какая пара сильнее всего рискует дублировать информацию?',a:['Возраст и доход','Рост и вес','Годовой доход и месячная зарплата','Регион и политический интерес'],right:2,why:'Годовой доход и месячная зарплата почти являются одной величиной в разных масштабах.'},
-    {type:'modeltable',kind:'Выбор модели',q:'Для прогноза новых данных выбери модель с лучшим test-качеством.',why:'При одинаковой задаче меньший test RMSE обычно означает более точный прогноз.'},
-    {type:'roles',kind:'Y / X / контроль',q:'Исследовательский вопрос: «Связаны ли часы подготовки с результатом экзамена, если учесть курс обучения?» Как распределить роли?',a:['Y=экзамен, X=подготовка, контроль=курс','Y=подготовка, X=экзамен, контроль=курс','Y=курс, X=подготовка, контроль=экзамен'],right:0,why:'Y — результат, X — главный интересующий фактор, курс — дополнительный контроль.'},
-    {type:'choice',kind:'Причинность',q:'Коэффициент подготовки положительный и статистически значимый. Что из этого НЕ следует автоматически?',a:['Есть положительная ассоциация в модели','Можно получить условный прогноз','Подготовка причинно повышает результат','Можно интерпретировать знак коэффициента'],right:2,why:'Обычная регрессия на наблюдательных данных сама по себе не доказывает причинность.'},
-    {type:'residualclick',kind:'Остатки',q:'Нажми на точку с самым большим по модулю остатком.',why:'Нужно искать самое длинное вертикальное расстояние между точкой и линией.'}
-  ];
+  function qInt(min,max){ return Math.floor(rnd(min,max+1)); }
+
+  function makeChoice(kind,q,correct,wrong,why){
+    const opts=shuffle([{text:correct,ok:true},...wrong.map(text=>({text,ok:false}))]);
+    return {type:'choice',kind,q,a:opts.map(x=>x.text),right:opts.findIndex(x=>x.ok),why};
+  }
+
+  function makeScatterQuestion(){
+    const pattern=shuffle(['positive','negative','none'])[0];
+    const slope=pattern==='positive'?rnd(.55,.9):pattern==='negative'?rnd(-.9,-.55):rnd(-.06,.06);
+    const noise=pattern==='none'?25:rnd(9,15);
+    const points=Array.from({length:qInt(22,30)},()=>{
+      const x=rnd(5,95);
+      return {x,y:52+slope*(x-50)+normal()*noise};
+    });
+    const labels={positive:'Положительное',negative:'Отрицательное',none:'Почти отсутствует'};
+    const opts=shuffle(['positive','negative','none']);
+    return {
+      type:'scatter',kind:'График связи',
+      q:'Посмотри на новый набор данных. Какое направление линейной связи здесь заметнее?',
+      points,a:opts.map(k=>labels[k]),right:opts.indexOf(pattern),
+      why:pattern==='positive'?'Облако в среднем поднимается слева направо.':pattern==='negative'?'Облако в среднем опускается слева направо.':'У облака нет устойчивого линейного наклона.'
+    };
+  }
+
+  function makeResidualQuestion(){
+    const pattern=shuffle(['nonlinear','hetero','ok'])[0];
+    const points=Array.from({length:qInt(38,50)},(_,i)=>{
+      const x=-3+i*6/45;
+      let y;
+      if(pattern==='nonlinear') y=rnd(4.4,6.2)*(x*x-3)+normal()*rnd(3.2,5.2);
+      else if(pattern==='hetero') y=normal()*(3.5+(x+3)*rnd(2.5,4.2));
+      else y=normal()*rnd(6,9);
+      return {x,y};
+    });
+    const labels={nonlinear:'Нелинейность',hetero:'Гетероскедастичность',ok:'Явной систематической проблемы не видно'};
+    const opts=shuffle(['nonlinear','hetero','ok']);
+    return {
+      type:'residual',kind:'Диагностика',
+      q:'Что показывает этот новый график остатков?',
+      points,a:opts.map(k=>labels[k]),right:opts.indexOf(pattern),
+      why:pattern==='nonlinear'?'Дуга означает, что прямая линия пропускает криволинейную структуру.':pattern==='hetero'?'Ширина разброса меняется — видна воронка.':'Остатки выглядят как случайное облако вокруг нуля.'
+    };
+  }
+
+  function makeOutlierQuestion(){
+    const n=qInt(14,19);
+    const points=Array.from({length:n},(_,i)=>{
+      const x=rnd(8,72);
+      return {x,y:22+.62*x+normal()*7};
+    });
+    const side=Math.random()<.5?'right':'left';
+    const target={x:side==='right'?rnd(94,104):rnd(-4,2),y:rnd(12,92),outlier:true,quizTarget:true};
+    points.push(target);
+    shuffle(points);
+    return {type:'outlier',kind:'Выброс и leverage',q:'На новом графике нажми на точку с потенциально самым высоким leverage.',points,why:'Ищи наблюдение, которое дальше всего от основной массы именно по оси X.'};
+  }
+
+  function makeModelTableQuestion(){
+    const best=rnd(10.5,16.5), mid=best+rnd(2,4.5), worst=mid+rnd(1.5,4);
+    const models=shuffle([
+      {name:'A',r2:rnd(.48,.66),rmse:worst},
+      {name:'B',r2:rnd(.64,.79),rmse:best,best:true},
+      {name:'C',r2:rnd(.78,.93),rmse:mid}
+    ]);
+    return {type:'modeltable',kind:'Выбор модели',q:'Для прогноза новых данных выбери модель с лучшим test-качеством.',models,why:'Для одной задачи меньшее значение test RMSE означает меньшую типичную ошибку прогноза.'};
+  }
+
+  function makeResidualClickQuestion(){
+    const n=qInt(18,25);
+    const points=Array.from({length:n},()=>{
+      const x=rnd(5,95);
+      return {x,y:18+.72*x+normal()*6};
+    });
+    const special=qInt(3,n-4);
+    points[special].y+=(Math.random()<.5?-1:1)*rnd(24,36);
+    const reg=regression(points);
+    const residuals=points.map(p=>Math.abs(p.y-(reg.b0+reg.b1*p.x)));
+    return {type:'residualclick',kind:'Остатки',q:'На новом графике нажми на точку с самым большим по модулю остатком.',points,reg,target:residuals.indexOf(Math.max(...residuals)),why:'Самый большой остаток — самое длинное вертикальное расстояние между наблюдением и линией.'};
+  }
+
+  function generateQuiz(){
+    const b0=qInt(4,20), b1=qInt(2,7), x=qInt(2,9), yhat=b0+b1*x;
+    const fact=qInt(45,90), pred=fact+qInt(-14,14) || fact+6;
+    const resid=fact-pred;
+    const coef=(Math.random()<.5?-1:1)*qInt(2,6);
+    const r2=qInt(35,89)/100;
+    const d0=qInt(25,65), db=qInt(4,15);
+    const m0=qInt(15,35), mb1=qInt(2,6), mb2=qInt(1,4), mx1=qInt(2,6), mx2=qInt(5,9);
+    const mpred=m0+mb1*mx1+mb2*mx2;
+    const p=[.001,.008,.018,.027,.041,.064,.11,.18][qInt(0,7)];
+    const sig=p<.05;
+    const alpha=.05;
+
+    const tasks=[
+      {type:'number',kind:'Расчёт',q:'Модель: Ŷ = '+b0+' + '+b1+'X. Чему равен прогноз при X = '+x+'?',answer:yhat,tolerance:0,why:b1+'×'+x+' = '+(b1*x)+', затем '+b0+'+'+(b1*x)+' = '+yhat+'.'},
+      makeChoice('OLS','Что именно минимизирует обычный МНК (OLS)?','Сумму квадратов остатков',['Сумму значений X','Количество коэффициентов','R²'],'OLS подбирает линию с минимальной суммой квадратов вертикальных ошибок.'),
+      makeChoice('Коэффициент','В новой модели β₁ = '+coef+'. Какое чтение корректно?','При +1 к X прогноз Y в среднем меняется на '+coef,['X объясняет '+Math.abs(coef)+'% Y','Каждое Y обязательно меняется ровно на '+coef,'R² равно '+coef],'β₁ — изменение прогнозируемого Y при увеличении X на одну единицу.'),
+      {type:'number',kind:'Остаток',q:'Факт Y = '+fact+', прогноз Ŷ = '+pred+'. Чему равен остаток e = Y − Ŷ?',answer:resid,tolerance:0,why:fact+'−'+pred+' = '+resid+'.'},
+      makeChoice('R²','В новой модели R² = '+r2.toFixed(2).replace('.',',')+'. Что это означает?','Модель описывает около '+Math.round(r2*100)+'% вариации Y в этой выборке',['Около '+Math.round(r2*100)+'% наблюдений предсказаны точно','Причинность доказана на '+Math.round(r2*100)+'%','Ошибка равна '+Math.round((1-r2)*100)+' единицам'],'R² относится к доле вариации Y, описанной моделью.'),
+      makeScatterQuestion(),
+      makeScatterQuestion(),
+      makeResidualQuestion(),
+      makeResidualQuestion(),
+      makeOutlierQuestion(),
+      makeChoice('Dummy','Модель Ŷ = '+d0+' + '+db+'D, где D=0 для A и D=1 для B. Что означает коэффициент '+db+'?','Группа B в среднем выше A на '+db+' единиц',['Группа B выше на '+db+'%','Вероятность B равна '+db,'R² равно '+db],'Dummy-коэффициент — разница с базовой категорией в единицах Y.'),
+      {type:'number',kind:'Dummy',q:'В модели Ŷ = '+d0+' + '+db+'D чему равен прогноз для группы B (D=1)?',answer:d0+db,tolerance:0,why:d0+' + '+db+'×1 = '+(d0+db)+'.'},
+      makeChoice('Множественная регрессия','Ŷ = '+m0+' + '+mb1+'·подготовка + '+mb2+'·сон. Что означает коэффициент '+mb1+' при подготовке?','При +1 часу подготовки прогноз выше на '+mb1+' при одинаковом сне',['Нужно сложить '+mb1+' и '+mb2,'Сон не нужно учитывать','Это '+mb1+'%'],'В множественной регрессии другие включённые X мысленно фиксируются.'),
+      {type:'number',kind:'Множественная регрессия',q:'Ŷ = '+m0+' + '+mb1+'·подготовка + '+mb2+'·сон. Подготовка = '+mx1+', сон = '+mx2+'. Чему равен прогноз?',answer:mpred,tolerance:0,why:m0+' + '+mb1+'×'+mx1+' + '+mb2+'×'+mx2+' = '+mpred+'.'},
+      makeChoice('p-value','Исследователь получил p = '+p.toFixed(3).replace('.',',')+' при α = 0,05. Какой вывод корректнее?',sig?'Есть основание отвергнуть H₀ при α=0,05, но это не вероятность истинности эффекта':'При α=0,05 данных недостаточно для отвержения H₀',['Эффект истинный с вероятностью '+Math.round((1-p)*100)+'%','Эффект автоматически причинный','R² можно вычислить как 1−p'],sig?'p меньше α, поэтому H₀ отвергают в рамках этой процедуры; это не вероятность истинности эффекта.':'p больше α, поэтому при таком пороге H₀ не отвергают.'),
+      makeChoice('Мультиколлинеарность','Какая пара сильнее всего рискует дублировать одну и ту же информацию?','Годовой доход ↔ месячная зарплата',['Возраст ↔ доход','Рост ↔ вес','Регион ↔ политический интерес'],'Эти две величины могут быть почти прямым пересчётом друг друга.'),
+      makeModelTableQuestion(),
+      makeChoice('Y / X / контроль','Вопрос: «Связаны ли часы сна с результатом теста, если учесть курс обучения?» Как распределить роли?','Y=результат теста, X=часы сна, контроль=курс',['Y=часы сна, X=результат теста, контроль=курс','Y=курс, X=сон, контроль=результат','Y=результат, X=курс, контроль=сон'],'Y — то, что объясняем; X — главный интересующий фактор; курс — дополнительный контроль.'),
+      makeChoice('Причинность','Коэффициент X положительный и статистически значимый. Что НЕ следует автоматически?','X причинно повышает Y',['В модели есть положительная ассоциация','Знак коэффициента можно интерпретировать','По формуле можно получить условный прогноз'],'Ассоциация и статистическая значимость сами по себе не доказывают причинный эффект.'),
+      makeResidualClickQuestion()
+    ];
+    return shuffle(tasks);
+  }
+
 
   function quizScatterPoints(pattern){
     const pts=[];
@@ -1490,46 +1587,37 @@
       visual.hidden=false;
       const svg=svgEl('svg',{viewBox:'0 0 620 330'});
       visual.append(svg);
-      const pts=quizScatterPoints(q.pattern);
-      drawScatter(svg,pts,{w:620,h:330,pad:42});
+      drawScatter(svg,q.points,{w:620,h:330,pad:42});
     } else if(q.type==='residual'){
       visual.hidden=false;
       const svg=svgEl('svg',{viewBox:'0 0 620 330'});
       visual.append(svg);
-      drawScatter(svg,quizResidualPoints(q.pattern),{w:620,h:330,pad:42,zeroY:0,fixed:{xmin:-3.3,xmax:3.3,ymin:-34,ymax:34}});
+      drawScatter(svg,q.points,{w:620,h:330,pad:42,zeroY:0,fixed:{xmin:-3.3,xmax:3.3,ymin:-36,ymax:36}});
     } else if(q.type==='outlier'){
       visual.hidden=false;
       const svg=svgEl('svg',{viewBox:'0 0 620 330'});
       visual.append(svg);
-      const pts=Array.from({length:15},(_,i)=>({x:8+i*4,y:24+i*2.6+seededNoise(i+440)*7}));
-      pts.push({x:96,y:18,outlier:true,quizTarget:true});
-      drawScatter(svg,pts,{w:620,h:330,pad:42,fixed:{xmin:0,xmax:105,ymin:0,ymax:100}});
-      svg.querySelectorAll('circle').forEach((c,i)=>{c.style.cursor='pointer';c.addEventListener('click',()=>answerQuizPoint(i===pts.length-1,c,q));});
+      drawScatter(svg,q.points,{w:620,h:330,pad:42});
+      svg.querySelectorAll('circle').forEach((c,i)=>{
+        c.style.cursor='pointer';
+        c.addEventListener('click',()=>answerQuizPoint(!!q.points[i].quizTarget,c,q));
+      });
     } else if(q.type==='modeltable'){
       visual.hidden=false;
-      const models=[
-        {name:'A',r2:.64,rmse:21.4},
-        {name:'B',r2:.78,rmse:15.2,best:true},
-        {name:'C',r2:.89,rmse:18.7}
-      ];
+      const models=q.models;
       visual.innerHTML='<div class="quiz-model-table">'+models.map((m,i)=>'<button type="button" data-model="'+i+'"><strong>Модель '+m.name+'</strong><span>R² train '+m.r2.toFixed(2)+'</span><span>RMSE test '+m.rmse.toFixed(1)+'</span></button>').join('')+'</div>';
       visual.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>answerQuizModel(models[i],b,q)));
     } else if(q.type==='residualclick'){
       visual.hidden=false;
       const svg=svgEl('svg',{viewBox:'0 0 620 330'});
       visual.append(svg);
-      const pts=Array.from({length:20},(_,i)=>{const x=5+i*4.5;return {x,y:20+.7*x+seededNoise(i+500)*7};});
-      pts[13].y+=30;
-      const reg=regression(pts);
-      const residuals=pts.map(p=>Math.abs(p.y-(reg.b0+reg.b1*p.x)));
-      const target=residuals.indexOf(Math.max(...residuals));
-      drawScatter(svg,pts,{w:620,h:330,pad:42,line:reg,residuals:true,clickable:true});
-      svg.querySelectorAll('circle').forEach((c,i)=>c.addEventListener('click',()=>answerQuizPoint(i===target,c,q)));
+      drawScatter(svg,q.points,{w:620,h:330,pad:42,line:q.reg,residuals:true,clickable:true});
+      svg.querySelectorAll('circle').forEach((c,i)=>c.addEventListener('click',()=>answerQuizPoint(i===q.target,c,q)));
     }
   }
 
   function startQuiz() {
-    state.quiz = {active:true,index:0,score:0,locked:false,order:[...quizBank],attempts:0};
+    state.quiz = {active:true,index:0,score:0,locked:false,order:generateQuiz(),attempts:0};
     $('#quizStart').style.display = 'none';
     $('#quizNext').disabled = true;
     renderQuiz();
