@@ -24,7 +24,7 @@
     </nav>
     <button class="progress-pill" id="progressPill" type="button" aria-label="Открыть прогресс">
       <span class="progress-dot"></span>
-      <span id="progressText">0 / 15</span>
+      <span id="progressText">0 / 16</span>
     </button>
   </header>
 
@@ -471,10 +471,120 @@
       </div>
     </section>
 
-    <section class="full-bleed electric-section" id="final" data-chapter="15">
+
+    <section class="full-bleed data-lab-section" id="data-lab" data-chapter="15">
+      <div class="shell chapter reveal">
+        <div class="chapter-head">
+          <div><span class="chapter-index">15</span><span class="eyebrow">Мини-SPSS для новичка</span></div>
+          <h2>Теперь работаем с настоящей таблицей.</h2>
+          <p>Ты увидишь данные как в статистической программе: строки — люди, столбцы — признаки. Выбираешь, что предсказывать и чем объяснять, нажимаешь «Запустить регрессию» и читаешь результат по шагам.</p>
+        </div>
+
+        <div class="data-lab-intro">
+          <div><span>1</span><strong>Выбери Y</strong><p>Что хотим предсказать?</p></div>
+          <div><span>2</span><strong>Выбери X</strong><p>Какой фактор нас интересует?</p></div>
+          <div><span>3</span><strong>Добавь контроль</strong><p>Что ещё разумно учесть?</p></div>
+          <div><span>4</span><strong>Запусти модель</strong><p>Сайт всё посчитает сам.</p></div>
+        </div>
+
+        <div class="data-lab-layout">
+          <div class="card dataset-card">
+            <div class="dataset-toolbar">
+              <div>
+                <div class="card-kicker">Данные · 24 студента</div>
+                <strong>Учёба, сон и экзамен</strong>
+              </div>
+              <button class="micro-link" id="regenDataset" type="button">↻ Новый набор</button>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table" id="studentTable">
+                <thead><tr><th>№</th><th>Экзамен</th><th>Подготовка, ч</th><th>Сон, ч</th><th>Курс</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="table-help">Не пугайся таблицы: сейчас нам нужны только названия столбцов и общий смысл.</div>
+          </div>
+
+          <div class="card model-builder">
+            <div class="card-kicker">Конструктор модели</div>
+            <label>Y — что предсказываем?
+              <select id="labY">
+                <option value="exam">Результат экзамена</option>
+              </select>
+            </label>
+            <label>X — главный фактор
+              <select id="labX">
+                <option value="study">Часы подготовки</option>
+                <option value="sleep">Часы сна</option>
+                <option value="year">Курс обучения</option>
+              </select>
+            </label>
+            <label>Контроль
+              <select id="labControl">
+                <option value="none">Без контроля</option>
+                <option value="sleep">Часы сна</option>
+                <option value="year">Курс обучения</option>
+                <option value="study">Часы подготовки</option>
+              </select>
+            </label>
+            <button class="btn primary" id="runLabRegression" type="button">Запустить регрессию</button>
+            <div class="builder-tip">Начни с: Y = экзамен, X = подготовка, контроль = сон.</div>
+          </div>
+        </div>
+
+        <div class="lab-results" id="labResults" hidden>
+          <div class="card result-summary">
+            <div class="result-title">
+              <div><span class="card-kicker">Шаг 1 · общая картина</span><h3>Насколько модель вообще что-то объясняет?</h3></div>
+              <div class="r2-badge"><span>R²</span><strong id="labR2">—</strong></div>
+            </div>
+            <div class="plain-result" id="labR2Plain"></div>
+          </div>
+
+          <div class="card coeff-card">
+            <div class="card-kicker">Шаг 2 · коэффициенты</div>
+            <h3>Читаем таблицу без паники</h3>
+            <div class="coeff-table-wrap">
+              <table class="coeff-table">
+                <thead><tr><th>Переменная</th><th>Коэффициент</th><th>Простыми словами</th></tr></thead>
+                <tbody id="labCoeffBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="lab-two">
+            <div class="card residual-mini">
+              <div class="card-kicker">Шаг 3 · ошибки модели</div>
+              <h3>Остатки</h3>
+              <svg id="labResidualChart" viewBox="0 0 620 340" role="img" aria-label="График остатков модели"></svg>
+              <p>Если точки беспорядочно разбросаны около нуля — это хороший знак. Явная дуга или воронка заставляет насторожиться.</p>
+            </div>
+
+            <div class="card task-card lab-conclusion">
+              <div class="task-tag">Задание · поймай плохой вывод</div>
+              <h3>Какой вывод нельзя делать?</h3>
+              <div class="answer-stack" id="labConclusionAnswers">
+                <button data-answer="association">«Часы подготовки связаны с результатом экзамена в этой модели»</button>
+                <button data-answer="prediction">«По модели можно получить средний прогноз результата при заданных X»</button>
+                <button data-answer="causality">«Раз коэффициент положительный, мы доказали, что подготовка причинно повышает результат»</button>
+              </div>
+              <div class="feedback" id="labConclusionFeedback"></div>
+            </div>
+          </div>
+
+          <div class="card model-story">
+            <div class="card-kicker">Шаг 4 · собери вывод</div>
+            <h3>Готовая человеческая интерпретация</h3>
+            <p id="labNarrative">Запусти модель, и здесь появится текст, который можно научиться читать как абзац результата.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="full-bleed electric-section" id="final" data-chapter="16">
       <div class="shell chapter reveal">
         <div class="chapter-head light final-head">
-          <div><span class="chapter-index">15</span><span class="eyebrow">Финальный спринт</span></div>
+          <div><span class="chapter-index">16</span><span class="eyebrow">Финальный спринт</span></div>
           <h2>10 решений. Один заход.</h2>
           <p>Смешанный квиз: интерпретация, диагностика, формулы, логика модели. После каждого ответа сразу увидишь разбор.</p>
         </div>
