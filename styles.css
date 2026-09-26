@@ -36,3 +36,47 @@ main{padding-top:72px}.hero{min-height:760px;display:grid;grid-template-columns:
 .quiz-meta{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 18px;color:#aeb7c6;font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:850}.quiz-visual{margin:18px 0 6px;padding:16px;border:1px solid #303847;border-radius:20px;background:#111722}.quiz-visual svg{width:100%;height:auto}.quiz-input-zone{margin-top:18px}.quiz-number-box{display:flex;gap:10px;align-items:center}.quiz-number-box input{flex:1;min-width:0;border:1px solid #394454;background:#111722;color:#fff;border-radius:15px;padding:14px 16px;font-size:20px;font-weight:800;outline:none}.quiz-number-box input:focus{border-color:#6dff9a;box-shadow:0 0 0 3px rgba(109,255,154,.08)}.quiz-model-table{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.quiz-model-table button{border:1px solid #36404f;background:#1b222d;color:#fff;border-radius:16px;padding:16px;text-align:left;cursor:pointer;display:grid;gap:6px}.quiz-model-table button strong{font-size:18px}.quiz-model-table button span{font-size:13px;color:#b6bfcc}.quiz-model-table button.correct{border-color:#6dff9a;background:#193025}.quiz-model-table button.wrong{border-color:#ff6f7d;background:#321e23;opacity:.65}.quiz-arena .point{transition:opacity .18s,r .18s}.quiz-arena .outlier-point{fill:#ff5f6d}.quiz-arena .residual-line{stroke:#ff8d97}.quiz-arena .zero-line{stroke:#6f7b8e}.quiz-arena .gridline{stroke:#303847}.quiz-arena .chart-label{fill:#aeb7c6}@media(max-width:760px){.quiz-model-table{grid-template-columns:1fr}.quiz-number-box{align-items:stretch;flex-direction:column}.quiz-number-box .btn{width:100%}}
 
 .back-to-top{position:fixed;right:24px;bottom:24px;z-index:180;width:52px;height:52px;border:1px solid rgba(16,19,26,.12);border-radius:18px;background:#fff;color:var(--ink);display:grid;place-items:center;font-size:26px;font-weight:900;box-shadow:0 14px 38px rgba(20,26,36,.18);cursor:pointer;opacity:0;transform:translateY(14px) scale(.92);pointer-events:none;transition:opacity .2s ease,transform .2s ease,background .2s ease,color .2s ease}.back-to-top.show{opacity:1;transform:none;pointer-events:auto}.back-to-top:hover{background:var(--ink);color:#fff;transform:translateY(-2px)}.back-to-top:focus-visible{outline:3px solid rgba(72,104,255,.28);outline-offset:3px}@media(max-width:640px){.back-to-top{right:14px;bottom:14px;width:48px;height:48px;border-radius:16px;font-size:24px}}
+
+/* clearer task guidance */
+.task-stage .task-tag{display:none!important}
+.task-instruction{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:flex-start;margin:0 0 18px;padding:20px 22px;border:2px solid #5d6cff;border-radius:20px;background:linear-gradient(180deg,#f4f6ff,#ffffff);box-shadow:0 10px 28px rgba(72,104,255,.08)}
+.task-instruction-icon{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#111722;color:#fff;font-size:22px;font-weight:900}
+.task-instruction span{display:block;text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:900;color:#5567db}
+.task-instruction h4{margin:5px 0 10px;font-size:24px;line-height:1.08;letter-spacing:-.03em}
+.task-instruction ol{margin:0;padding-left:20px}
+.task-instruction li{margin:6px 0;color:#39465a;line-height:1.5;font-size:14px}
+.dark-section .task-instruction,.research-section .task-instruction,.electric-section .task-instruction{background:#171f2a;border-color:#7f8cff;color:#fff}
+.dark-section .task-instruction li,.research-section .task-instruction li,.electric-section .task-instruction li{color:#c5ceda}
+.dark-section .task-instruction span,.research-section .task-instruction span,.electric-section .task-instruction span{color:#9eabff}
+
+/* solved state navigation */
+.next-block-wrap{display:none;justify-content:space-between;align-items:center;gap:18px;margin:26px 0 0;padding:20px 22px;border-radius:20px;background:linear-gradient(135deg,#eefaf1,#f8fffa);border:1px solid #cce8d4}
+.next-block-wrap.show{display:flex}
+.next-block-wrap span{display:block;text-transform:uppercase;letter-spacing:.09em;font-size:10px;font-weight:900;color:#4a8b5b}
+.next-block-wrap strong{display:block;margin-top:2px;font-size:20px}
+.next-block-wrap p{margin:4px 0 0;color:#607164;font-size:13px}
+.dark-section .next-block-wrap,.research-section .next-block-wrap,.electric-section .next-block-wrap{background:#193025;border-color:#315c40;color:#fff}
+.dark-section .next-block-wrap p,.research-section .next-block-wrap p,.electric-section .next-block-wrap p{color:#b8cfbf}
+
+/* better contrast for dark answer states */
+.dark-answer-stack button.correct,.dark-choices button.correct{color:#143420!important;background:#eaf8ee!important;border-color:#74c98e!important}
+.dark-answer-stack button.wrong,.dark-choices button.wrong{color:#5d1e24!important;background:#fdebed!important;border-color:#eaa0a7!important}
+.model-card.locked-choice{opacity:.5}
+.model-card.correct-model{opacity:1!important;outline:3px solid #43c971;outline-offset:2px}
+
+/* remove obsolete micro-lecture visuals if cached markup survives */
+.microlecture{display:none!important}
+
+/* disabled controls should look intentionally finished */
+.variable-chip:disabled,.role-slot:disabled,#researchPool button:disabled,#research .research-slots button:disabled{cursor:default;opacity:.62}
+.role-slot.filled:disabled,#research .research-slots button.filled:disabled{opacity:1}
+
+/* instruction should stand out especially on role assignment */
+#roles .task-instruction,#research .task-instruction{border-width:3px;box-shadow:0 12px 34px rgba(72,104,255,.14)}
+
+@media(max-width:640px){
+  .task-instruction{grid-template-columns:1fr;padding:17px}
+  .task-instruction-icon{width:34px;height:34px}
+  .next-block-wrap{align-items:stretch;flex-direction:column}
+  .next-block-wrap .btn{width:100%}
+}
