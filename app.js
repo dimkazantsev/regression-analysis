@@ -250,9 +250,73 @@
     return sc;
   }
 
+  let audioCtx=null;
+  const soundState={
+    enabled: localStorage.getItem(NS+':sound')!=='off'
+  };
+
+  function getAudioCtx(){
+    if(!audioCtx){
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx=new Ctx();
+    }
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function tone(ctx,{freq=440,start=0,duration=.12,gain=.04,type='sine',endFreq=null}={}){
+    const osc=ctx.createOscillator();
+    const g=ctx.createGain();
+    osc.type=type;
+    osc.frequency.setValueAtTime(freq,ctx.currentTime+start);
+    if(endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq,ctx.currentTime+start+duration);
+    g.gain.setValueAtTime(0.0001,ctx.currentTime+start);
+    g.gain.exponentialRampToValueAtTime(gain,ctx.currentTime+start+.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+start+duration);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(ctx.currentTime+start);
+    osc.stop(ctx.currentTime+start+duration+.02);
+  }
+
+  function playFeedbackSound(ok){
+    if(!soundState.enabled) return;
+    const ctx=getAudioCtx();
+    if(!ctx) return;
+    if(ok){
+      tone(ctx,{freq:740,start:0,duration:.12,gain:.035,type:'sine',endFreq:880});
+      tone(ctx,{freq:1046,start:.09,duration:.18,gain:.03,type:'sine',endFreq:1174});
+    }else{
+      tone(ctx,{freq:330,start:0,duration:.12,gain:.032,type:'sine',endFreq:270});
+      tone(ctx,{freq:260,start:.11,duration:.16,gain:.028,type:'triangle',endFreq:220});
+    }
+  }
+
+  function syncSoundToggle(){
+    const btn=$('#soundToggle'), icon=$('#soundIcon');
+    if(!btn||!icon) return;
+    btn.setAttribute('aria-pressed',soundState.enabled?'true':'false');
+    btn.setAttribute('aria-label',soundState.enabled?'Отключить звуки':'Включить звуки');
+    icon.textContent=soundState.enabled?'🔊':'🔇';
+  }
+
+  function toggleSound(){
+    soundState.enabled=!soundState.enabled;
+    localStorage.setItem(NS+':sound',soundState.enabled?'on':'off');
+    syncSoundToggle();
+    if(soundState.enabled){
+      const ctx=getAudioCtx();
+      if(ctx){
+        tone(ctx,{freq:740,start:0,duration:.08,gain:.025});
+        tone(ctx,{freq:980,start:.06,duration:.12,gain:.022});
+      }
+    }
+  }
+
   function setFeedback(el, ok, text) {
     el.className = 'feedback ' + (el.classList.contains('dark-feedback') ? 'dark-feedback ' : '') + (ok ? 'good' : 'bad');
     el.textContent = text;
+    playFeedbackSound(ok);
   }
 
   function toast(text) {
@@ -1945,6 +2009,8 @@
     $('#quizNext').addEventListener('click',nextQuiz);
 
     $('#progressPill').addEventListener('click',() => $('.mastery').scrollIntoView({behavior:'smooth'}));
+    $('#soundToggle').addEventListener('click',toggleSound);
+    syncSoundToggle();
 
     const backToTop=$('#backToTop');
     const updateBackToTop=()=>backToTop.classList.toggle('show',window.scrollY>520);
