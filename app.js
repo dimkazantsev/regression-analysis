@@ -786,6 +786,293 @@
     }));
   }
 
+
+  const lessonContent = {
+    1:{
+      title:'Что такое связь между X и Y?',
+      lead:'Мы пока ничего не считаем. Учимся видеть общую тенденцию в облаке точек.',
+      points:[
+        ['X','Горизонтальная ось. То, что мы используем как возможный предиктор.'],
+        ['Y','Вертикальная ось. То, что хотим объяснить или предсказать.'],
+        ['Положительная связь','Чем больше X, тем в среднем выше Y.'],
+        ['Отрицательная связь','Чем больше X, тем в среднем ниже Y.']
+      ],
+      example:'Если студенты, которые готовятся дольше, обычно получают более высокий балл, облако точек будет в среднем подниматься слева направо.',
+      warning:'Связь ещё не означает причинность. Мы лишь видим совместное изменение.',
+      visual:'trend'
+    },
+    2:{
+      title:'Что делает линия регрессии?',
+      lead:'Она пытается пройти через облако точек так, чтобы в среднем ошибаться как можно меньше.',
+      points:[
+        ['β₀','Свободный член. Где линия пересекает ось Y при X = 0.'],
+        ['β₁','Наклон. На сколько в среднем меняется прогноз Y при росте X на 1.'],
+        ['Остаток','Вертикальная ошибка: реальное Y минус прогноз модели.'],
+        ['OLS / МНК','Правило, которое выбирает линию с минимальной суммой квадратов остатков.']
+      ],
+      example:'Если β₁ = 4, то при увеличении X на 1 прогноз Y в среднем увеличивается на 4.',
+      warning:'Линия не обязана проходить через каждую точку. Она описывает среднюю тенденцию.',
+      visual:'ols'
+    },
+    3:{
+      title:'Как читать коэффициент без формул?',
+      lead:'Коэффициент — это обычная фраза о среднем изменении прогноза.',
+      points:[
+        ['Знак','Плюс означает рост прогноза Y, минус — снижение.'],
+        ['Величина','Показывает размер среднего изменения Y на одну единицу X.'],
+        ['Единицы','Всегда читай единицы X и Y: баллы, рубли, часы, проценты.'],
+        ['Причинность','Коэффициент сам по себе её не доказывает.']
+      ],
+      example:'β₁ = 3,4 при X = часы подготовки и Y = балл теста: ещё 1 час связан в среднем с +3,4 балла к прогнозу.',
+      warning:'Не путай коэффициент с R² и не превращай обычные единицы в проценты без основания.',
+      visual:'coefficient'
+    },
+    4:{
+      title:'Почему одна точка может сильно изменить модель?',
+      lead:'Не все наблюдения одинаково влияют на линию.',
+      points:[
+        ['Выброс','Точка, заметно отличающаяся по Y или по общему поведению.'],
+        ['Leverage','Насколько необычно положение точки по X.'],
+        ['Влияние','Точка с высоким leverage и большой ошибкой может заметно повернуть линию.'],
+        ['Проверка','Выброс не удаляют автоматически: сначала выясняют, ошибка это или реальное наблюдение.']
+      ],
+      example:'Если почти все X лежат от 10 до 70, а одно наблюдение имеет X = 100, оно получает сильный «рычаг».',
+      warning:'Удалять необычные данные только потому, что они мешают красивому результату, нельзя.',
+      visual:'outlier'
+    },
+    5:{
+      title:'Что такое остаток?',
+      lead:'Остаток показывает, насколько модель промахнулась для конкретного наблюдения.',
+      points:[
+        ['Формула','остаток = реальное Y − прогноз Ŷ'],
+        ['Положительный','Реальное значение оказалось выше прогноза.'],
+        ['Отрицательный','Реальное значение оказалось ниже прогноза.'],
+        ['Большой модуль','Модель сильно ошиблась на этом наблюдении.']
+      ],
+      example:'Реальный балл 78, модель предсказала 70. Остаток = +8.',
+      warning:'Остаток — не «плохое наблюдение». Это просто величина ошибки модели для одной строки.',
+      visual:'residual'
+    },
+    6:{
+      title:'Зачем смотреть на график остатков?',
+      lead:'Даже хороший R² не показывает, правильно ли выбрана форма модели.',
+      points:[
+        ['Хороший признак','Остатки случайно разбросаны вокруг нуля.'],
+        ['Дуга','Линейная модель, возможно, пропускает нелинейную зависимость.'],
+        ['Воронка','Разброс ошибок меняется — возможна гетероскедастичность.'],
+        ['Система','Любая повторяющаяся форма означает: в ошибках осталась информация.']
+      ],
+      example:'Если остатки образуют U-образную дугу, прямая линия слишком грубо описывает зависимость.',
+      warning:'Диагностика — это не поиск «идеальной картинки», а поиск систематической структуры в ошибках.',
+      visual:'diagnostics'
+    },
+    7:{
+      title:'Почему больше переменных не всегда лучше?',
+      lead:'Модель может идеально подстроиться под обучающие данные и хуже работать на новых.',
+      points:[
+        ['Train','Данные, на которых модель обучали.'],
+        ['Test','Отложенные данные для проверки прогноза.'],
+        ['R²','На train обычно не уменьшается при добавлении X.'],
+        ['RMSE','Типичный размер ошибки прогноза; на test меньше обычно лучше.']
+      ],
+      example:'Модель с 11 предикторами может иметь R² = 0,90 на train, но ошибаться сильнее на test, чем модель с 5 предикторами.',
+      warning:'Нельзя выбирать модель только по самому большому train R².',
+      visual:'duel'
+    },
+    8:{
+      title:'Регрессия как машина прогноза',
+      lead:'В простейшем виде формула просто превращает X в прогноз Ŷ.',
+      points:[
+        ['Ŷ','Не реальное Y, а предсказанное моделью.'],
+        ['β₀','То, что остаётся в формуле при X = 0.'],
+        ['β₁X','Часть прогноза, связанная с конкретным значением X.'],
+        ['Подстановка','Берём X, умножаем на коэффициент, прибавляем β₀.']
+      ],
+      example:'Ŷ = 12 + 3X и X = 6 → Ŷ = 12 + 18 = 30.',
+      warning:'Прогноз не означает, что каждый человек с X = 6 обязательно получит Y = 30.',
+      visual:'prediction'
+    },
+    9:{
+      title:'Как выбрать Y, X и контроль?',
+      lead:'Правильная модель начинается не с кнопки «Regression», а с исследовательского вопроса.',
+      points:[
+        ['Y','Результат: что хотим объяснить или предсказать?'],
+        ['X','Главный фактор, связь которого с Y нас интересует.'],
+        ['Контроль','Дополнительный фактор, который разумно учесть.'],
+        ['Логика','Роли определяются вопросом исследования, а не названием столбца.']
+      ],
+      example:'«Связаны ли часы подготовки с баллом экзамена с учётом курса?» → Y: балл, X: часы, контроль: курс.',
+      warning:'Одна и та же переменная в другом исследовательском вопросе может играть другую роль.',
+      visual:'roles'
+    },
+    10:{
+      title:'Как регрессия понимает категории?',
+      lead:'Компьютеру удобно представить две категории как 0 и 1.',
+      points:[
+        ['0','Базовая категория, относительно которой идёт сравнение.'],
+        ['1','Сравниваемая категория.'],
+        ['Коэффициент','Средняя разница между группой 1 и группой 0 при прочих равных.'],
+        ['Dummy','Так называется переменная-код 0/1.']
+      ],
+      example:'Ŷ = 50 + 8D. Для D = 0 прогноз 50, для D = 1 прогноз 58. Разница = 8.',
+      warning:'Коэффициент +8 — это 8 единиц Y, а не автоматически 8%.',
+      visual:'dummy'
+    },
+    11:{
+      title:'Что значит «при прочих равных»?',
+      lead:'В множественной регрессии коэффициент одного X читают так, будто остальные включённые X мы удерживаем на месте.',
+      points:[
+        ['Частный эффект','Изменение прогноза по одному X при фиксированных остальных X.'],
+        ['Контроль','Позволяет сравнивать более похожие наблюдения.'],
+        ['Не магия','Контроль не устраняет автоматически все возможные смещения.'],
+        ['Интерпретация','Всегда называй, какие переменные удерживаются фиксированными.']
+      ],
+      example:'Ŷ = 30 + 4·подготовка + 2·сон. При одинаковом сне +1 час подготовки связан с +4 к прогнозу.',
+      warning:'«При прочих равных» относится только к тем переменным, которые действительно включены в модель.',
+      visual:'multiple'
+    },
+    12:{
+      title:'Что на самом деле говорит p-value?',
+      lead:'p-value помогает оценить совместимость данных с нулевой гипотезой при заданных предпосылках.',
+      points:[
+        ['Нулевая гипотеза','Часто: коэффициент в генеральной совокупности равен нулю.'],
+        ['Малое p','Такие данные труднее объяснить одной лишь нулевой гипотезой.'],
+        ['Порог','0,05 — условная договорённость, а не закон природы.'],
+        ['Не вероятность истины','p = 0,03 не означает «эффект истинный с вероятностью 97%».']
+      ],
+      example:'Если p = 0,03, мы можем сказать, что при нулевой гипотезе такие или более экстремальные данные были бы сравнительно редкими.',
+      warning:'Статистическая значимость не равна практической важности.',
+      visual:'pvalue'
+    },
+    13:{
+      title:'Почему похожие X мешают друг другу?',
+      lead:'Если два предиктора почти повторяют одну и ту же информацию, модели трудно разделить их индивидуальные вклады.',
+      points:[
+        ['Мультиколлинеарность','Сильная зависимость между предикторами.'],
+        ['Следствие','Коэффициенты могут становиться нестабильнее.'],
+        ['VIF','Один из диагностических показателей проблемы.'],
+        ['Решение','Проверить смысл переменных, корреляции и необходимость одновременного включения.']
+      ],
+      example:'Месячная зарплата и годовой доход могут почти дублировать друг друга.',
+      warning:'Высокая связь X между собой не обязательно портит прогноз, но может сильно мешать интерпретации отдельных коэффициентов.',
+      visual:'vif'
+    },
+    14:{
+      title:'Как мыслит исследователь до расчёта?',
+      lead:'Сначала вопрос и теория, затем переменные, и только потом статистическая модель.',
+      points:[
+        ['Шаг 1','Сформулируй, что именно хочешь объяснить.'],
+        ['Шаг 2','Назначь Y.'],
+        ['Шаг 3','Назначь главный X и обоснуй его.'],
+        ['Шаг 4','Добавь только осмысленные контроли.']
+      ],
+      example:'Вопрос «почему различаются результаты экзамена?» допускает часы подготовки как X и сон как контроль.',
+      warning:'Добавлять все доступные столбцы «на всякий случай» — плохая стратегия.',
+      visual:'research'
+    },
+    15:{
+      title:'Как читать результат регрессии в таблице?',
+      lead:'Не нужно читать всё сразу. Двигайся сверху вниз: модель → коэффициенты → остатки → вывод.',
+      points:[
+        ['R²','Сколько вариации Y описывает модель в этой выборке.'],
+        ['Коэффициенты','Направление и величина связи каждого X с прогнозом Y.'],
+        ['Остатки','Где и как модель ошибается.'],
+        ['Вывод','Описание связи, а не автоматическое доказательство причинности.']
+      ],
+      example:'Если коэффициент подготовки = 4,6, то +1 час связан примерно с +4,6 балла к прогнозу при фиксированном контроле.',
+      warning:'Одна таблица коэффициентов не заменяет проверку предпосылок и исследовательский дизайн.',
+      visual:'table'
+    },
+    16:{
+      title:'Финальная карта курса',
+      lead:'Перед итоговым квизом соберём все идеи в одну цепочку.',
+      points:[
+        ['Вопрос','Что хотим объяснить?'],
+        ['Модель','Какие X включаем и почему?'],
+        ['Результат','Как читаем коэффициенты, R² и ошибки?'],
+        ['Ограничения','Что мы можем утверждать, а что — нет?']
+      ],
+      example:'Регрессия — это не одна формула, а последовательность решений: вопрос → данные → модель → диагностика → интерпретация.',
+      warning:'Если сомневаешься между красивым числом и содержательной логикой — возвращайся к исследовательскому вопросу.',
+      visual:'map'
+    }
+  };
+
+  function lessonVisual(type){
+    const common='<svg viewBox="0 0 520 210" class="lesson-svg" aria-hidden="true">';
+    if(type==='trend') return common+'<line x1="40" y1="175" x2="490" y2="175" class="lv-axis"/><line x1="40" y1="175" x2="40" y2="25" class="lv-axis"/>'+Array.from({length:13},(_,i)=>'<circle cx="'+(55+i*31)+'" cy="'+(160-i*8+Math.sin(i)*18)+'" r="6" class="lv-dot"/>').join('')+'<path d="M55 155 L455 55" class="lv-line"/></svg>';
+    if(type==='ols') return common+'<line x1="45" y1="175" x2="485" y2="175" class="lv-axis"/><line x1="45" y1="175" x2="45" y2="25" class="lv-axis"/><line x1="70" y1="160" x2="455" y2="50" class="lv-line"/><circle cx="160" cy="110" r="7" class="lv-dot"/><line x1="160" y1="110" x2="160" y2="134" class="lv-error"/><circle cx="295" cy="120" r="7" class="lv-dot"/><line x1="295" y1="120" x2="295" y2="96" class="lv-error"/><circle cx="400" cy="48" r="7" class="lv-dot"/><line x1="400" y1="48" x2="400" y2="66" class="lv-error"/></svg>';
+    if(type==='coefficient') return common+'<path d="M55 160 L460 55" class="lv-line thick"/><text x="70" y="190" class="lv-text">+1 по X</text><path d="M230 145 H300" class="lv-arrow"/><path d="M300 145 V118" class="lv-arrow"/><text x="312" y="123" class="lv-text">+β₁ по Ŷ</text></svg>';
+    if(type==='outlier') return common+Array.from({length:12},(_,i)=>'<circle cx="'+(70+i*26)+'" cy="'+(150-i*6+Math.sin(i)*9)+'" r="6" class="lv-dot"/>').join('')+'<circle cx="455" cy="45" r="11" class="lv-danger"/><path d="M65 160 L350 85" class="lv-muted-line"/><path d="M65 166 L460 48" class="lv-danger-line"/></svg>';
+    if(type==='residual') return common+'<line x1="70" y1="160" x2="455" y2="60" class="lv-line"/><circle cx="275" cy="70" r="8" class="lv-dot"/><line x1="275" y1="70" x2="275" y2="107" class="lv-error thick"/><text x="290" y="92" class="lv-text">остаток</text></svg>';
+    if(type==='diagnostics') return common+'<line x1="45" y1="105" x2="480" y2="105" class="lv-zero"/>'+Array.from({length:24},(_,i)=>'<circle cx="'+(55+i*17)+'" cy="'+(105+Math.sin(i*.7)*24+(i%3-1)*7)+'" r="4" class="lv-dot"/>').join('')+'<text x="350" y="35" class="lv-text">ищем структуру</text></svg>';
+    if(type==='duel') return common+'<rect x="55" y="70" width="110" height="95" rx="14" class="lv-card"/><rect x="205" y="45" width="110" height="120" rx="14" class="lv-card best"/><rect x="355" y="25" width="110" height="140" rx="14" class="lv-card"/><text x="84" y="125" class="lv-text">RMSE 21</text><text x="232" y="110" class="lv-text">RMSE 15</text><text x="383" y="100" class="lv-text">RMSE 18</text></svg>';
+    if(type==='prediction') return common+'<rect x="45" y="72" width="90" height="64" rx="14" class="lv-card"/><text x="82" y="111" class="lv-big">X</text><path d="M145 104 H218" class="lv-arrow"/><rect x="225" y="54" width="150" height="100" rx="16" class="lv-card best"/><text x="252" y="110" class="lv-text">β₀ + β₁X</text><path d="M385 104 H435" class="lv-arrow"/><text x="450" y="111" class="lv-big">Ŷ</text></svg>';
+    if(type==='roles') return common+'<rect x="30" y="70" width="120" height="70" rx="14" class="lv-card best"/><text x="78" y="111" class="lv-big">Y</text><rect x="200" y="70" width="120" height="70" rx="14" class="lv-card"/><text x="248" y="111" class="lv-big">X</text><rect x="370" y="70" width="120" height="70" rx="14" class="lv-card"/><text x="410" y="111" class="lv-big">C</text></svg>';
+    if(type==='dummy') return common+'<rect x="90" y="65" width="110" height="85" rx="18" class="lv-card"/><text x="138" y="117" class="lv-big">0</text><path d="M215 106 H305" class="lv-arrow"/><rect x="320" y="65" width="110" height="85" rx="18" class="lv-card best"/><text x="368" y="117" class="lv-big">1</text><text x="220" y="76" class="lv-text">разница = β</text></svg>';
+    if(type==='multiple') return common+'<text x="40" y="108" class="lv-big">X₁</text><text x="40" y="155" class="lv-big">X₂</text><path d="M95 100 C170 100 175 105 230 105" class="lv-arrow"/><path d="M95 148 C170 148 175 118 230 118" class="lv-arrow"/><rect x="235" y="66" width="150" height="92" rx="18" class="lv-card best"/><text x="268" y="118" class="lv-text">модель</text><path d="M390 112 H455" class="lv-arrow"/><text x="467" y="118" class="lv-big">Ŷ</text></svg>';
+    if(type==='pvalue') return common+'<line x1="55" y1="150" x2="465" y2="150" class="lv-axis"/><path d="M70 150 C150 145 175 40 260 40 C345 40 365 145 450 150" class="lv-line"/><path d="M390 150 C410 135 430 130 450 150" class="lv-danger-fill"/><text x="370" y="184" class="lv-text">редкая область</text></svg>';
+    if(type==='vif') return common+'<circle cx="190" cy="105" r="66" class="lv-circle"/><circle cx="310" cy="105" r="66" class="lv-circle alt"/><text x="155" y="110" class="lv-big">X₁</text><text x="320" y="110" class="lv-big">X₂</text><text x="228" y="185" class="lv-text">слишком много общей информации</text></svg>';
+    if(type==='research') return common+'<rect x="35" y="78" width="100" height="60" rx="13" class="lv-card best"/><text x="72" y="115" class="lv-big">?</text><path d="M145 108 H205" class="lv-arrow"/><rect x="215" y="45" width="95" height="55" rx="12" class="lv-card"/><rect x="215" y="115" width="95" height="55" rx="12" class="lv-card"/><path d="M320 76 H390" class="lv-arrow"/><path d="M320 142 H390" class="lv-arrow"/><rect x="400" y="78" width="90" height="60" rx="13" class="lv-card best"/><text x="438" y="115" class="lv-big">Y</text></svg>';
+    if(type==='table') return common+'<rect x="70" y="40" width="380" height="130" rx="14" class="lv-card"/>'+[75,105,135].map(y=>'<line x1="85" y1="'+y+'" x2="435" y2="'+y+'" class="lv-grid"/>').join('')+'<line x1="220" y1="50" x2="220" y2="160" class="lv-grid"/><line x1="320" y1="50" x2="320" y2="160" class="lv-grid"/><text x="96" y="68" class="lv-text">переменная</text><text x="238" y="68" class="lv-text">β</text><text x="340" y="68" class="lv-text">смысл</text></svg>';
+    return common+'<path d="M45 110 H130 M155 110 H240 M265 110 H350 M375 110 H465" class="lv-arrow"/><circle cx="142" cy="110" r="12" class="lv-dot"/><circle cx="252" cy="110" r="12" class="lv-dot"/><circle cx="362" cy="110" r="12" class="lv-dot"/><text x="40" y="75" class="lv-text">вопрос</text><text x="190" y="75" class="lv-text">модель</text><text x="315" y="75" class="lv-text">проверка</text><text x="420" y="75" class="lv-text">вывод</text></svg>';
+  }
+
+  function buildLessonPanel(chapter){
+    const l=lessonContent[chapter];
+    if(!l) return '';
+    return '<div class="lesson-gate" data-lesson="'+chapter+'">'+
+      '<div class="lesson-top"><div><span class="lesson-label">Сначала разберёмся</span><h3>'+l.title+'</h3><p>'+l.lead+'</p></div><div class="lesson-status">Теория перед заданием</div></div>'+
+      '<div class="lesson-body">'+
+        '<div class="lesson-visual">'+lessonVisual(l.visual)+'</div>'+
+        '<div class="lesson-concepts">'+l.points.map((p,i)=>'<article><span>0'+(i+1)+'</span><div><strong>'+p[0]+'</strong><p>'+p[1]+'</p></div></article>').join('')+'</div>'+
+      '</div>'+
+      '<div class="worked-example"><span>Пример</span><p>'+l.example+'</p></div>'+
+      '<div class="lesson-warning"><strong>Не перепутай:</strong> '+l.warning+'</div>'+
+      '<div class="lesson-actions"><button class="btn primary lesson-unlock" type="button">Понял — перейти к заданию ↓</button><span>Задание откроется только после этого объяснения.</span></div>'+
+    '</div>';
+  }
+
+  function initLessonGates(){
+    document.querySelectorAll('[data-chapter]').forEach(section=>{
+      const chapter=section.dataset.chapter;
+      const holder=section.querySelector('.chapter');
+      if(!holder || holder.querySelector('.lesson-gate')) return;
+      const head=holder.querySelector('.chapter-head');
+      if(!head) return;
+      head.insertAdjacentHTML('afterend',buildLessonPanel(chapter));
+      const gate=holder.querySelector('.lesson-gate');
+      let after=false;
+      [...holder.children].forEach(child=>{
+        if(child===gate){ after=true; return; }
+        if(after) child.classList.add('task-stage','is-locked');
+      });
+      const unlocked=localStorage.getItem(NS+':lesson:'+chapter)==='1';
+      if(unlocked) unlockLesson(section,false);
+      gate.querySelector('.lesson-unlock').addEventListener('click',()=>unlockLesson(section,true));
+    });
+  }
+
+  function unlockLesson(section,scroll){
+    const chapter=section.dataset.chapter;
+    const gate=section.querySelector('.lesson-gate');
+    if(!gate) return;
+    localStorage.setItem(NS+':lesson:'+chapter,'1');
+    gate.classList.add('lesson-done');
+    const btn=gate.querySelector('.lesson-unlock');
+    if(btn){btn.textContent='Объяснение пройдено ✓';btn.disabled=true;}
+    const holder=section.querySelector('.chapter');
+    let after=false, first=null;
+    [...holder.children].forEach(child=>{
+      if(child===gate){after=true;return;}
+      if(after && child.classList.contains('task-stage')){
+        child.classList.remove('is-locked');
+        if(!first) first=child;
+      }
+    });
+    if(scroll && first) setTimeout(()=>first.scrollIntoView({behavior:'smooth',block:'start'}),180);
+  }
+
   const quizBank = [
     {q:'В модели Ŷ = 10 + 2X чему равен прогноз при X = 4?',a:['12','18','24','40'],right:1,why:'10 + 2×4 = 18.'},
     {q:'Что минимизирует обычный МНК (OLS)?',a:['Сумму абсолютных X','Сумму квадратов остатков','Число коэффициентов','R²'],right:1,why:'OLS выбирает коэффициенты, минимизирующие сумму квадратов остатков.'},
@@ -932,6 +1219,7 @@
     bind();
     updateProgress();
     initReveal();
+    initLessonGates();
     renderHero();
     newIntuition();
     initLineGame();
