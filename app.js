@@ -1993,6 +1993,7 @@
     if(!btn||!menu||!backdrop||!close) return;
 
     const openMenu=()=>{
+      menu.hidden=false;
       menu.classList.add('open');
       menu.setAttribute('aria-hidden','false');
       backdrop.hidden=false;
@@ -2003,6 +2004,7 @@
     const closeMenu=()=>{
       menu.classList.remove('open');
       menu.setAttribute('aria-hidden','true');
+      menu.hidden=true;
       backdrop.hidden=true;
       btn.setAttribute('aria-expanded','false');
       document.body.classList.remove('menu-open');
