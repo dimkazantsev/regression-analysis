@@ -24,11 +24,24 @@
     </nav>
     <button class="progress-pill" id="progressPill" type="button" aria-label="Открыть прогресс">
       <span class="progress-dot"></span>
-      <span id="progressText">0 / 8</span>
+      <span id="progressText">0 / 15</span>
     </button>
   </header>
 
   <main id="top">
+    <section class="starter-strip shell reveal" aria-label="Как работать с курсом">
+      <div class="starter-copy">
+        <span class="eyebrow">Режим для новичка включён</span>
+        <strong>Здесь можно ошибаться.</strong>
+        <span>Сначала идея → потом пример → затем одно действие → только после этого термин.</span>
+      </div>
+      <button class="btn ghost small" id="simpleModeToggle" type="button" aria-pressed="true">Объяснять совсем просто: ВКЛ</button>
+    </section>
+    <div class="term-popover" id="termPopover" role="dialog" aria-live="polite">
+      <button type="button" id="closeTerm" aria-label="Закрыть">×</button>
+      <strong id="termTitle"></strong>
+      <p id="termText"></p>
+    </div>
     <section class="hero shell reveal">
       <div class="hero-copy">
         <div class="eyebrow">Интерактивный учебник-тренажёр</div>
@@ -222,10 +235,246 @@
       <button class="micro-link" id="newModelDuel" type="button">↻ Новая дуэль</button>
     </section>
 
-    <section class="full-bleed electric-section" id="final" data-chapter="8">
+
+    <section class="full-bleed lesson-band" id="prediction" data-chapter="8">
+      <div class="shell chapter reveal">
+        <div class="chapter-head">
+          <div><span class="chapter-index">08</span><span class="eyebrow">Самая простая машина прогноза</span></div>
+          <h2>Подставь X. Получи Ŷ.</h2>
+          <p>Регрессия — это прежде всего правило, которое превращает известное X в прогноз Y. Никакой магии: умножили, прибавили, получили прогноз.</p>
+        </div>
+
+        <div class="teach-first">
+          <div class="tiny-lesson">
+            <span class="tiny-num">1</span>
+            <div><strong>X</strong><p>То, что мы знаем. Например, часы подготовки.</p></div>
+          </div>
+          <div class="tiny-arrow">→</div>
+          <div class="tiny-lesson">
+            <span class="tiny-num">2</span>
+            <div><strong>формула</strong><p>Например: Ŷ = 20 + 5X.</p></div>
+          </div>
+          <div class="tiny-arrow">→</div>
+          <div class="tiny-lesson">
+            <span class="tiny-num">3</span>
+            <div><strong>Ŷ</strong><p>Наш прогноз результата.</p></div>
+          </div>
+        </div>
+
+        <div class="prediction-grid">
+          <div class="card machine-card">
+            <div class="card-kicker">Попробуй руками</div>
+            <div class="machine-formula">Ŷ = <span>20</span> + <span>5</span> × X</div>
+            <label class="number-entry">Если X = <input id="predictX" type="number" min="0" max="20" step="1" value="4"></label>
+            <div class="machine-result">
+              <span>то прогноз Ŷ =</span>
+              <strong id="predictY">40</strong>
+            </div>
+            <div class="simple-note">Это не обязательно реальное значение конкретного человека. Это <button class="term" data-term="prediction">прогноз</button> модели.</div>
+          </div>
+          <div class="card task-card">
+            <div class="task-tag">Задание · посчитай</div>
+            <h3>Теперь без подсказки</h3>
+            <p>Модель: <strong>Ŷ = 12 + 3X</strong>. Человек готовился <strong>6 часов</strong>. Какой результат предсказывает модель?</p>
+            <div class="inline-answer">
+              <input id="predictAnswer" inputmode="decimal" placeholder="Введите число">
+              <button class="btn primary" id="checkPrediction" type="button">Проверить</button>
+            </div>
+            <div class="feedback" id="predictionFeedback"></div>
+            <div class="beginner-extra">Совсем просто: сначала 3 × 6 = 18. Потом прибавь 12.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="roles" data-chapter="9">
+      <div class="chapter-head">
+        <div><span class="chapter-index">09</span><span class="eyebrow">Кто есть кто в модели</span></div>
+        <h2>Не перепутай X и Y.</h2>
+        <p>Y — то, что хотим объяснить или предсказать. X — то, чем пытаемся это объяснить. Контроль — ещё одна характеристика, которую удерживаем в модели, чтобы сравнение было честнее.</p>
+      </div>
+
+      <div class="card roles-game">
+        <div class="case-banner"><strong>Кейс:</strong> хотим понять, как часы подготовки связаны с результатом экзамена, учитывая курс обучения студента.</div>
+        <div class="role-columns">
+          <div class="variable-bank" id="variableBank">
+            <button class="variable-chip" data-var="score">Баллы экзамена</button>
+            <button class="variable-chip" data-var="hours">Часы подготовки</button>
+            <button class="variable-chip" data-var="year">Курс обучения</button>
+          </div>
+          <div class="role-slots">
+            <button class="role-slot" data-role="y"><span>Y</span><strong>Что предсказываем?</strong><em>нажми сюда после выбора переменной</em></button>
+            <button class="role-slot" data-role="x"><span>X</span><strong>Главный предиктор</strong><em>что нас интересует?</em></button>
+            <button class="role-slot" data-role="control"><span>C</span><strong>Контроль</strong><em>что ещё учитываем?</em></button>
+          </div>
+        </div>
+        <div class="roles-actions">
+          <span id="selectedVariable">Сначала выбери карточку переменной.</span>
+          <button class="btn primary" id="checkRoles" type="button">Проверить раскладку</button>
+        </div>
+        <div class="feedback" id="rolesFeedback"></div>
+      </div>
+    </section>
+
+    <section class="full-bleed dark-section" id="dummy" data-chapter="10">
+      <div class="shell chapter reveal">
+        <div class="chapter-head light">
+          <div><span class="chapter-index">10</span><span class="eyebrow">Dummy без страха</span></div>
+          <h2>Переменная-выключатель: 0 или 1.</h2>
+          <p>Категорию можно превратить в переключатель. 0 — базовая группа, 1 — другая группа. Коэффициент показывает среднюю разницу между ними при прочих равных.</p>
+        </div>
+
+        <div class="dummy-grid">
+          <div class="card dark-card dummy-machine">
+            <div class="card-kicker">Модель: Ŷ = 50 + 8D</div>
+            <div class="dummy-switches">
+              <button class="dummy-choice active" data-d="0"><span>0</span>Группа A</button>
+              <button class="dummy-choice" data-d="1"><span>1</span>Группа B</button>
+            </div>
+            <div class="dummy-output"><span>Прогноз</span><strong id="dummyPrediction">50</strong></div>
+            <div class="simple-note dark-note">Когда D меняется с 0 на 1, прогноз меняется ровно на коэффициент при D.</div>
+          </div>
+          <div class="card dark-card task-card">
+            <div class="task-tag">Задание · прочитай коэффициент</div>
+            <h3>Что означает +8?</h3>
+            <div class="answer-stack dark-answer-stack" id="dummyAnswers">
+              <button data-answer="diff">Группа B в среднем выше группы A на 8 единиц</button>
+              <button data-answer="percent">Группа B выше ровно на 8%</button>
+              <button data-answer="cause">Принадлежность к группе B обязательно вызывает рост на 8</button>
+            </div>
+            <div class="feedback dark-feedback" id="dummyFeedback"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="multiple" data-chapter="11">
+      <div class="chapter-head">
+        <div><span class="chapter-index">11</span><span class="eyebrow">Множественная регрессия</span></div>
+        <h2>«При прочих равных» — буквально.</h2>
+        <p>Если в модели два X, мы можем менять один фактор, удерживая второй на месте. Именно так читаются частные коэффициенты.</p>
+      </div>
+
+      <div class="multiple-grid">
+        <div class="card multiple-machine">
+          <div class="card-kicker">Ŷ = 30 + 4·часы + 2·сон</div>
+          <label>Часы подготовки <output id="studyOut">3</output><input id="studySlider" type="range" min="0" max="10" value="3" step="1"></label>
+          <label>Часы сна <output id="sleepOut">7</output><input id="sleepSlider" type="range" min="3" max="10" value="7" step="1"></label>
+          <div class="big-prediction"><span>Прогноз экзамена</span><strong id="multiplePrediction">56</strong></div>
+        </div>
+        <div class="card task-card">
+          <div class="task-tag">Задание · при прочих равных</div>
+          <h3>Что делает коэффициент 4?</h3>
+          <p>Представь двух студентов с одинаковым количеством сна. Один готовился на 1 час больше.</p>
+          <div class="answer-stack" id="multipleAnswers">
+            <button data-answer="four">Прогноз второго выше в среднем на 4 балла</button>
+            <button data-answer="six">Прогноз второго выше на 6 баллов</button>
+            <button data-answer="unknown">Сравнить нельзя, потому что в модели две переменные</button>
+          </div>
+          <div class="feedback" id="multipleFeedback"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="full-bleed soft-section" id="significance" data-chapter="12">
+      <div class="shell chapter reveal">
+        <div class="chapter-head">
+          <div><span class="chapter-index">12</span><span class="eyebrow">Не бойся p-value</span></div>
+          <h2>Сигнал или слишком много шума?</h2>
+          <p>Здесь не нужно запоминать магическое число. Идея проще: насколько данные совместимы с ситуацией, где настоящий эффект равен нулю, при принятых предпосылках теста.</p>
+        </div>
+
+        <div class="sig-grid">
+          <div class="card p-machine">
+            <div class="p-value-display"><span>p =</span><strong id="pValueOut">0.032</strong></div>
+            <input id="pSlider" type="range" min="1" max="300" value="32" step="1">
+            <div class="traffic-light">
+              <span class="lamp green" id="lampGreen"></span>
+              <span class="lamp amber" id="lampAmber"></span>
+              <span class="lamp red" id="lampRed"></span>
+              <strong id="pPlainLanguage">Есть статистический сигнал при пороге 0,05</strong>
+            </div>
+            <div class="simple-note">Важно: <strong>p &lt; 0,05 не означает «95% вероятности, что гипотеза верна»</strong>.</div>
+          </div>
+          <div class="card task-card">
+            <div class="task-tag">Задание · найди ошибку</div>
+            <h3>Исследователь пишет:</h3>
+            <blockquote>«p = 0,03, значит вероятность того, что эффект настоящий, равна 97%».</blockquote>
+            <div class="answer-stack" id="pAnswers">
+              <button data-answer="wrong">Это неверная интерпретация p-value</button>
+              <button data-answer="right">Да, именно это p-value и означает</button>
+            </div>
+            <div class="feedback" id="pFeedback"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="vif" data-chapter="13">
+      <div class="chapter-head">
+        <div><span class="chapter-index">13</span><span class="eyebrow">Переменные-близнецы</span></div>
+        <h2>Когда два X рассказывают почти одно и то же.</h2>
+        <p>Если предикторы очень похожи друг на друга, модели трудно понять, кому из них «приписать» общий эффект. Это одна из форм <button class="term" data-term="multicollinearity">мультиколлинеарности</button>.</p>
+      </div>
+
+      <div class="card twin-game">
+        <div class="twin-case">
+          <span class="task-tag">Задание · найди подозрительную пару</span>
+          <h3>Какие две переменные, скорее всего, сильнее всего дублируют информацию?</h3>
+        </div>
+        <div class="twin-options" id="twinOptions">
+          <button data-answer="age-income">Возраст ↔ доход</button>
+          <button data-answer="height-weight">Рост ↔ вес</button>
+          <button data-answer="income-salary">Годовой доход ↔ месячная зарплата</button>
+          <button data-answer="region-interest">Регион ↔ интерес к политике</button>
+        </div>
+        <div class="vif-meter">
+          <span>условный VIF</span>
+          <div><i id="vifFill"></i></div>
+          <strong id="vifValue">?</strong>
+        </div>
+        <div class="feedback" id="vifFeedback"></div>
+        <div class="beginner-extra">Совсем просто: если две колонки почти повторяют друг друга, модель начинает путаться, какой коэффициент за что отвечает.</div>
+      </div>
+    </section>
+
+    <section class="full-bleed research-section" id="research" data-chapter="14">
+      <div class="shell chapter reveal">
+        <div class="chapter-head light">
+          <div><span class="chapter-index">14</span><span class="eyebrow">Ты — исследователь</span></div>
+          <h2>Собери модель сам.</h2>
+          <p>Никакой формулы заранее. Сначала вопрос исследования, затем Y, главный X и контроль. Это логика реальной работы с данными.</p>
+        </div>
+
+        <div class="research-board card dark-card">
+          <div class="research-question">Почему у студентов различается <strong>результат экзамена</strong>?</div>
+          <div class="research-pool" id="researchPool">
+            <button data-var="exam">Результат экзамена</button>
+            <button data-var="study">Часы подготовки</button>
+            <button data-var="sleep">Сон</button>
+            <button data-var="coffee">Любимый вид кофе</button>
+            <button data-var="year">Курс обучения</button>
+          </div>
+          <div class="research-slots">
+            <button data-slot="y"><span>Y</span><strong>?</strong><em>результат</em></button>
+            <div class="formula-plus">←</div>
+            <button data-slot="x"><span>X</span><strong>?</strong><em>главный фактор</em></button>
+            <div class="formula-plus">+</div>
+            <button data-slot="control"><span>C</span><strong>?</strong><em>контроль</em></button>
+          </div>
+          <div class="research-footer">
+            <span id="researchHint">Выбери переменную, затем назначь ей роль.</span>
+            <button class="btn electric" id="checkResearch" type="button">Запустить проверку</button>
+          </div>
+          <div class="feedback dark-feedback" id="researchFeedback"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="full-bleed electric-section" id="final" data-chapter="15">
       <div class="shell chapter reveal">
         <div class="chapter-head light final-head">
-          <div><span class="chapter-index">08</span><span class="eyebrow">Финальный спринт</span></div>
+          <div><span class="chapter-index">15</span><span class="eyebrow">Финальный спринт</span></div>
           <h2>10 решений. Один заход.</h2>
           <p>Смешанный квиз: интерпретация, диагностика, формулы, логика модели. После каждого ответа сразу увидишь разбор.</p>
         </div>
