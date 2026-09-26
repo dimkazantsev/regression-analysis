@@ -241,6 +241,7 @@
         'data-index':i
       });
       if (options.clickable) c.style.cursor = 'pointer';
+      if (options.smooth) c.style.transition = 'cx .22s ease, cy .22s ease, r .15s ease, opacity .15s ease';
       svg.append(c);
     });
     return sc;
@@ -290,19 +291,33 @@
     $$('.reveal').forEach(el => obs.observe(el));
   }
 
+  const heroBase = Array.from({length:42},(_,i)=>{
+    const xz = (i-20.5)/12.2;
+    const ez = seededNoise(i+905)*1.65 + seededNoise(i+1205)*.35;
+    return {xz,ez};
+  });
+
   function renderHero() {
     const rho = Number($('#rhoSlider').value);
-    const noise = Number($('#noiseSlider').value);
+    const spread = Number($('#noiseSlider').value);
     $('#rhoOut').textContent = rho.toFixed(2);
-    $('#noiseOut').textContent = noise;
-    const points = Array.from({length:42}, (_, i) => {
-      const x = 5 + i * 90 / 41;
-      const baseNoise = seededNoise(i + 5) * noise;
-      const y = 52 + rho * .78 * (x - 50) + baseNoise;
-      return {x,y};
-    });
+    $('#noiseOut').textContent = spread;
+
+    const residualWeight = Math.sqrt(Math.max(0,1-rho*rho));
+    const raw = heroBase.map(p => ({
+      x: 50 + 23*p.xz,
+      y: 50 + spread*(rho*p.xz + residualWeight*p.ez*.62)
+    }));
+    const points = raw.map(p => ({
+      x: clamp(p.x,4,96),
+      y: clamp(p.y,4,96)
+    }));
     const reg = regression(points);
-    drawScatter($('#heroChart'), points, {w:600,h:360,line:reg,pad:38});
+    drawScatter($('#heroChart'), points, {
+      w:600,h:360,line:reg,pad:38,
+      fixed:{xmin:0,xmax:100,ymin:0,ymax:100},
+      smooth:true
+    });
     $('#heroBeta').textContent = fmt(reg.b1,2);
     $('#heroR2').textContent = clamp(reg.r2,0,1).toFixed(2);
   }
