@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <title>Регрессия — интерактивная лаборатория</title>
+  <meta name="description" content="Интерактивный учебный тренажёр по регрессионному анализу: визуальные эксперименты, задачи, диагностика моделей и квизы." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="На главную">
+      <span class="brand-mark">β</span>
+      <span>Регрессия</span>
+      <span class="brand-sub">lab</span>
+    </a>
+    <nav class="topnav" aria-label="Навигация по курсу">
+      <a href="#intuition">Интуиция</a>
+      <a href="#line-game">Линия</a>
+      <a href="#outlier">Выброс</a>
+      <a href="#diagnostics">Диагностика</a>
+      <a href="#final">Финал</a>
+    </nav>
+    <button class="progress-pill" id="progressPill" type="button" aria-label="Открыть прогресс">
+      <span class="progress-dot"></span>
+      <span id="progressText">0 / 8</span>
+    </button>
+  </header>
+
+  <main id="top">
+    <section class="hero shell reveal">
+      <div class="hero-copy">
+        <div class="eyebrow">Интерактивный учебник-тренажёр</div>
+        <h1>Регрессия, которую<br><span class="accent">можно потрогать.</span></h1>
+        <p class="lead">Не заучивай формулы. Двигай коэффициенты, ломай модели выбросами, ищи остатки, сравнивай спецификации и принимай решения по данным.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#intuition">Начать лабораторию</a>
+          <button class="btn ghost" id="resetProgress" type="button">Сбросить прогресс</button>
+        </div>
+        <div class="hero-stats">
+          <div><strong>8</strong><span>разных механик</span></div>
+          <div><strong>∞</strong><span>вариантов данных</span></div>
+          <div><strong>0</strong><span>зубрёжки</span></div>
+        </div>
+      </div>
+
+      <div class="hero-lab card glow-card">
+        <div class="card-kicker">LIVE · Песочница</div>
+        <div class="hero-chart-wrap">
+          <svg id="heroChart" viewBox="0 0 600 360" role="img" aria-label="Интерактивная диаграмма рассеяния"></svg>
+          <div class="chart-crosshair" aria-hidden="true"></div>
+        </div>
+        <div class="lab-controls two-cols">
+          <label>Сила связи <output id="rhoOut">0.65</output><input id="rhoSlider" type="range" min="-0.9" max="0.9" value="0.65" step="0.05"></label>
+          <label>Шум <output id="noiseOut">28</output><input id="noiseSlider" type="range" min="5" max="65" value="28" step="1"></label>
+        </div>
+        <div class="metric-row">
+          <div><span>β₁</span><strong id="heroBeta">—</strong></div>
+          <div><span>R²</span><strong id="heroR2">—</strong></div>
+          <div><span>n</span><strong>42</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="marquee-band" aria-label="Темы курса">
+      <div class="marquee-track">
+        <span>OLS</span><span>β₀</span><span>β₁</span><span>R²</span><span>остатки</span><span>выбросы</span><span>dummy</span><span>interaction</span><span>RMSE</span><span>диагностика</span>
+        <span>OLS</span><span>β₀</span><span>β₁</span><span>R²</span><span>остатки</span><span>выбросы</span><span>dummy</span><span>interaction</span><span>RMSE</span><span>диагностика</span>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="intuition" data-chapter="1">
+      <div class="chapter-head">
+        <div><span class="chapter-index">01</span><span class="eyebrow">Интуиция прежде формулы</span></div>
+        <h2>Сначала увидь связь.</h2>
+        <p>Каждый новый набор генерируется заново. Твоя задача — не считать, а понять направление связи по облаку точек.</p>
+      </div>
+      <div class="split-grid">
+        <div class="card chart-card">
+          <div class="card-kicker">Задание · распознавание</div>
+          <svg id="intuitionChart" viewBox="0 0 620 400" role="img" aria-label="Диаграмма рассеяния для задания"></svg>
+          <button class="micro-link" id="regenIntuition" type="button">↻ Новый набор данных</button>
+        </div>
+        <div class="card task-card">
+          <div class="task-tag">Выбери утверждение</div>
+          <h3>Что здесь происходит?</h3>
+          <p class="muted">Оцени только направление средней тенденции. Не пытайся судить о причинности.</p>
+          <div class="answer-stack" id="intuitionAnswers">
+            <button data-answer="positive">Y в среднем растёт вместе с X</button>
+            <button data-answer="negative">Y в среднем снижается при росте X</button>
+            <button data-answer="none">Выраженной линейной связи почти нет</button>
+          </div>
+          <div class="feedback" id="intuitionFeedback" aria-live="polite"></div>
+          <div class="concept-note"><strong>Идея:</strong> знак β₁ показывает направление линейной связи в модели, но сам по себе не доказывает причинность.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="full-bleed dark-section" id="line-game" data-chapter="2">
+      <div class="shell chapter reveal">
+        <div class="chapter-head light">
+          <div><span class="chapter-index">02</span><span class="eyebrow">OLS руками</span></div>
+          <h2>Поймай лучшую линию.</h2>
+          <p>Ты управляешь свободным членом и наклоном. Чем меньше сумма квадратов ошибок, тем ближе ты к OLS-решению.</p>
+        </div>
+        <div class="line-game-grid">
+          <div class="card dark-card plot-shell">
+            <svg id="lineGameChart" viewBox="0 0 680 440" role="img" aria-label="Диаграмма для настройки регрессионной линии"></svg>
+            <div class="score-float"><span>SSE</span><strong id="sseValue">—</strong></div>
+          </div>
+          <div class="card dark-card control-card">
+            <div class="task-tag">Задание · настрой модель</div>
+            <h3>Подгони линию</h3>
+            <label class="big-range">β₀ <output id="b0Out">20</output><input id="b0Slider" type="range" min="-30" max="80" step="1" value="20"></label>
+            <label class="big-range">β₁ <output id="b1Out">0.50</output><input id="b1Slider" type="range" min="-1.5" max="2" step="0.05" value="0.5"></label>
+            <div class="fit-meter"><span id="fitMeterFill"></span></div>
+            <p id="fitHint" class="muted-light">Двигай ползунки. Остатки показаны вертикальными линиями.</p>
+            <button class="btn electric" id="checkLine" type="button">Проверить модель</button>
+            <div class="feedback dark-feedback" id="lineFeedback" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="coefficients" data-chapter="3">
+      <div class="chapter-head">
+        <div><span class="chapter-index">03</span><span class="eyebrow">Перевод с языка коэффициентов</span></div>
+        <h2>Скажи это человеческим языком.</h2>
+        <p>Интерпретация коэффициента — один из главных навыков. Здесь задача меняется автоматически.</p>
+      </div>
+      <div class="card coefficient-machine">
+        <div class="scenario-head">
+          <div class="task-tag">Задание · интерпретация</div>
+          <button class="micro-link" id="newCoefficientTask" type="button">↻ Другая задача</button>
+        </div>
+        <div class="formula-display" id="coefficientFormula">Ŷ = 12 + 3.4X</div>
+        <div class="scenario-copy" id="coefficientScenario"></div>
+        <div class="choice-grid" id="coefficientAnswers"></div>
+        <div class="feedback" id="coefficientFeedback" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="outlier" data-chapter="4">
+      <div class="chapter-head">
+        <div><span class="chapter-index">04</span><span class="eyebrow">Эксперимент</span></div>
+        <h2>Одна точка может всё испортить.</h2>
+        <p>Добавь экстремальное наблюдение и посмотри, насколько оно способно потянуть линию за собой.</p>
+      </div>
+      <div class="split-grid">
+        <div class="card chart-card">
+          <svg id="outlierChart" viewBox="0 0 620 400" role="img" aria-label="Влияние выброса на регрессию"></svg>
+          <div class="toggle-row">
+            <span>Выброс</span>
+            <button class="toggle" id="outlierToggle" type="button" aria-pressed="false"><span></span></button>
+            <strong id="outlierState">выключен</strong>
+          </div>
+        </div>
+        <div class="card task-card">
+          <div class="before-after">
+            <div><span>β₁ без выброса</span><strong id="slopeClean">—</strong></div>
+            <div><span>β₁ сейчас</span><strong id="slopeCurrent">—</strong></div>
+          </div>
+          <h3>Почему линия меняется?</h3>
+          <div class="answer-stack" id="outlierAnswers">
+            <button data-answer="leverage">Точка далеко по X и получает высокий рычаг влияния</button>
+            <button data-answer="r2">Потому что R² всегда должен стать равен 1</button>
+            <button data-answer="intercept">Потому что выброс влияет только на β₀, но не на β₁</button>
+          </div>
+          <div class="feedback" id="outlierFeedback" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="full-bleed soft-section" id="residuals" data-chapter="5">
+      <div class="shell chapter reveal">
+        <div class="chapter-head">
+          <div><span class="chapter-index">05</span><span class="eyebrow">Охота на ошибки</span></div>
+          <h2>Найди самый большой остаток.</h2>
+          <p>Кликай по точке, у которой вертикальное расстояние до линии регрессии максимально по модулю.</p>
+        </div>
+        <div class="card residual-game-card">
+          <div class="residual-topline"><span class="task-tag">Задание · визуальный поиск</span><span id="residualAttempts">Попытки: 0</span></div>
+          <svg id="residualChart" viewBox="0 0 900 480" role="img" aria-label="Поиск наблюдения с самым большим остатком"></svg>
+          <div class="feedback" id="residualFeedback" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="diagnostics" data-chapter="6">
+      <div class="chapter-head">
+        <div><span class="chapter-index">06</span><span class="eyebrow">Диагностический детектив</span></div>
+        <h2>Что не так с остатками?</h2>
+        <p>Каждый раунд показывает новый паттерн. Определи проблему по форме облака остатков.</p>
+      </div>
+      <div class="diagnostic-grid">
+        <div class="card diag-visual">
+          <div class="card-kicker" id="diagRound">Раунд 1</div>
+          <svg id="diagChart" viewBox="0 0 620 380" role="img" aria-label="График остатков"></svg>
+        </div>
+        <div class="card task-card">
+          <h3>Твой диагноз</h3>
+          <div class="answer-stack" id="diagAnswers">
+            <button data-answer="ok">Явной структуры нет — выглядит приемлемо</button>
+            <button data-answer="hetero">Разброс растёт — возможна гетероскедастичность</button>
+            <button data-answer="nonlinear">Видна дуга — линейная форма пропускает нелинейность</button>
+          </div>
+          <div class="feedback" id="diagFeedback" aria-live="polite"></div>
+          <button class="btn ghost small" id="nextDiag" type="button">Следующий паттерн</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell chapter reveal" id="model-duel" data-chapter="7">
+      <div class="chapter-head">
+        <div><span class="chapter-index">07</span><span class="eyebrow">Model duel</span></div>
+        <h2>Больше переменных ≠ лучше модель.</h2>
+        <p>Цель здесь — прогноз на новых данных. Выбери модель по тестовой ошибке, а не по красоте R² на обучающей выборке.</p>
+      </div>
+      <div class="model-cards" id="modelCards"></div>
+      <div class="feedback standalone" id="modelFeedback" aria-live="polite"></div>
+      <button class="micro-link" id="newModelDuel" type="button">↻ Новая дуэль</button>
+    </section>
+
+    <section class="full-bleed electric-section" id="final" data-chapter="8">
+      <div class="shell chapter reveal">
+        <div class="chapter-head light final-head">
+          <div><span class="chapter-index">08</span><span class="eyebrow">Финальный спринт</span></div>
+          <h2>10 решений. Один заход.</h2>
+          <p>Смешанный квиз: интерпретация, диагностика, формулы, логика модели. После каждого ответа сразу увидишь разбор.</p>
+        </div>
+        <div class="quiz-arena card dark-card">
+          <div class="quiz-top">
+            <span id="quizCounter">Вопрос 1 / 10</span>
+            <span class="quiz-score">Очки: <strong id="quizScore">0</strong></span>
+          </div>
+          <div class="quiz-progress"><span id="quizProgressFill"></span></div>
+          <div class="quiz-question" id="quizQuestion">Нажми «Старт», чтобы начать.</div>
+          <div class="choice-grid dark-choices" id="quizAnswers"></div>
+          <div class="feedback dark-feedback" id="quizFeedback" aria-live="polite"></div>
+          <div class="quiz-actions">
+            <button class="btn electric" id="quizStart" type="button">Старт</button>
+            <button class="btn ghost inverted" id="quizNext" type="button" disabled>Дальше</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell mastery reveal">
+      <div class="mastery-card">
+        <div>
+          <span class="eyebrow">Твоя лаборатория</span>
+          <h2 id="masteryTitle">Пройди задания и собери профиль навыков.</h2>
+          <p id="masteryCopy">Прогресс сохраняется в этом браузере. Ошибки не штрафуют — они показывают, что стоит повторить.</p>
+        </div>
+        <div class="mastery-ring" id="masteryRing"><strong id="masteryPercent">0%</strong><span>готово</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <div><strong>Регрессия · lab</strong><span>Интерактивный учебный материал</span></div>
+    <a href="#top">Наверх ↑</a>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <script src="app.js"></script>
+</body>
+</html>
