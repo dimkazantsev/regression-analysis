@@ -2,7 +2,7 @@
   'use strict';
 
   const NS = 'regression-lab-v1';
-  const TOTAL = 8;
+  const TOTAL = 15;
   const state = {
     completed: new Set(JSON.parse(localStorage.getItem(NS + ':completed') || '[]')),
     intuitionTruth: 'positive',
@@ -16,6 +16,10 @@
     diagRound: 0,
     coefficientIndex: 0,
     duelModels: [],
+    selectedRoleVar: null,
+    roleAssignments: {y:null,x:null,control:null},
+    selectedResearchVar: null,
+    researchAssignments: {y:null,x:null,control:null},
     quiz: { active: false, index: 0, score: 0, locked: false, order: [] }
   };
 
@@ -470,6 +474,185 @@
     }
   }
 
+
+  const glossary = {
+    prediction:{title:'Прогноз (Ŷ)',text:'Это значение Y, которое рассчитала модель. Оно не обязано точно совпасть с реальным наблюдением.'},
+    multicollinearity:{title:'Мультиколлинеарность',text:'Ситуация, когда два или больше предиктора несут очень похожую информацию. Тогда отдельные коэффициенты могут становиться нестабильными и труднее интерпретироваться.'},
+    residual:{title:'Остаток',text:'Ошибка прогноза для одного наблюдения: реальное Y минус предсказанное Ŷ.'},
+    coefficient:{title:'Коэффициент',text:'Число при переменной. Оно показывает, насколько меняется прогноз Y при изменении этой переменной на одну единицу, при прочих равных.'}
+  };
+
+  function renderPredictionMachine(){
+    const x = Number($('#predictX').value || 0);
+    $('#predictY').textContent = 20 + 5*x;
+  }
+
+  function checkPrediction(){
+    const v = Number(String($('#predictAnswer').value).replace(',','.'));
+    if (v === 30){
+      setFeedback($('#predictionFeedback'),true,'Верно. 12 + 3×6 = 30. Ты только что вручную сделал прогноз по регрессии.');
+      complete(15);
+    } else {
+      setFeedback($('#predictionFeedback'),false,'Почти. Сначала умножь коэффициент при X на значение X: 3×6=18. Затем добавь свободный член 12.');
+    }
+  }
+
+  function initRolesGame(){
+    $('#variableBank .variable-chip').forEach(b=>b.addEventListener('click',()=>{
+      state.selectedRoleVar=b.dataset.var;
+      $('#variableBank .variable-chip').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+      $('#selectedVariable').textContent='Выбрано: '+b.textContent+'. Теперь нажми на роль справа.';
+    }));
+    $('.role-slot').forEach(slot=>slot.addEventListener('click',()=>{
+      if(!state.selectedRoleVar){ toast('Сначала выбери переменную слева'); return; }
+      const role=slot.dataset.role;
+      state.roleAssignments[role]=state.selectedRoleVar;
+      const src=$('#variableBank [data-var="'+state.selectedRoleVar+'"]');
+      slot.classList.add('filled');
+      slot.querySelector('strong').textContent=src ? src.textContent : state.selectedRoleVar;
+      state.selectedRoleVar=null;
+      $('#variableBank .variable-chip').forEach(x=>x.classList.remove('selected'));
+      $('#selectedVariable').textContent='Можно назначить следующую переменную.';
+    }));
+    $('#checkRoles').addEventListener('click',()=>{
+      const a=state.roleAssignments;
+      const ok=a.y==='score'&&a.x==='hours'&&a.control==='year';
+      setFeedback($('#rolesFeedback'),ok,ok
+        ? 'Да. Y — результат экзамена, X — часы подготовки, а курс обучения — дополнительный контроль.'
+        : 'Проверь логику вопроса: что мы хотим предсказать? Что является главным интересующим фактором? Что лишь дополнительно учитываем?');
+      if(ok) complete(9);
+    });
+  }
+
+  function initDummy(){
+    $('.dummy-choice').forEach(b=>b.addEventListener('click',()=>{
+      $('.dummy-choice').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      $('#dummyPrediction').textContent=50+8*Number(b.dataset.d);
+    }));
+    $('#dummyAnswers button').forEach(b=>b.addEventListener('click',()=>{
+      const ok=b.dataset.answer==='diff';
+      $('#dummyAnswers button').forEach(x=>x.disabled=true);
+      b.classList.add(ok?'correct':'wrong');
+      $('#dummyAnswers [data-answer="diff"]').classList.add('correct');
+      setFeedback($('#dummyFeedback'),ok,ok
+        ? 'Верно. При D=0 прогноз 50, при D=1 — 58. Разница равна коэффициенту +8.'
+        : 'Нет. Здесь +8 — разница в единицах Y между группой 1 и базовой группой 0, а не проценты и не доказанная причинность.');
+      if(ok) complete(10);
+    }));
+  }
+
+  function renderMultiple(){
+    const study=Number($('#studySlider').value), sleep=Number($('#sleepSlider').value);
+    $('#studyOut').textContent=study;
+    $('#sleepOut').textContent=sleep;
+    $('#multiplePrediction').textContent=30+4*study+2*sleep;
+  }
+
+  function initMultiple(){
+    $('#studySlider').addEventListener('input',renderMultiple);
+    $('#sleepSlider').addEventListener('input',renderMultiple);
+    renderMultiple();
+    $('#multipleAnswers button').forEach(b=>b.addEventListener('click',()=>{
+      const ok=b.dataset.answer==='four';
+      $('#multipleAnswers button').forEach(x=>x.disabled=true);
+      b.classList.add(ok?'correct':'wrong');
+      $('#multipleAnswers [data-answer="four"]').classList.add('correct');
+      setFeedback($('#multipleFeedback'),ok,ok
+        ? 'Именно. Сон мысленно фиксируем на одном уровне, а подготовку увеличиваем на 1 час — прогноз меняется на +4.'
+        : 'Смысл коэффициента 4 как раз в сравнении при одинаковом сне: +1 час подготовки соответствует +4 к прогнозу.');
+      if(ok) complete(11);
+    }));
+  }
+
+  function renderP(){
+    const p=Number($('#pSlider').value)/1000;
+    $('#pValueOut').textContent=p.toFixed(3);
+    $('.lamp').forEach(x=>x.classList.remove('active'));
+    let text='';
+    if(p<.05){ $('#lampGreen').classList.add('active'); text='Есть статистический сигнал при пороге 0,05';}
+    else if(p<.10){ $('#lampAmber').classList.add('active'); text='Пограничная зона при условном пороге 0,05';}
+    else { $('#lampRed').classList.add('active'); text='Данных недостаточно, чтобы отвергнуть нулевую гипотезу при пороге 0,05';}
+    $('#pPlainLanguage').textContent=text;
+  }
+
+  function initP(){
+    $('#pSlider').addEventListener('input',renderP);
+    renderP();
+    $('#pAnswers button').forEach(b=>b.addEventListener('click',()=>{
+      const ok=b.dataset.answer==='wrong';
+      $('#pAnswers button').forEach(x=>x.disabled=true);
+      b.classList.add(ok?'correct':'wrong');
+      $('#pAnswers [data-answer="wrong"]').classList.add('correct');
+      setFeedback($('#pFeedback'),ok,ok
+        ? 'Да. p-value не сообщает вероятность того, что эффект настоящий. Он относится к вероятности получить такие или более экстремальные данные при нулевой гипотезе и предпосылках теста.'
+        : 'Это распространённая ошибка. p=0,03 не означает 97% вероятности истинности эффекта.');
+      if(ok) complete(12);
+    }));
+  }
+
+  function initVif(){
+    $('#twinOptions button').forEach(b=>b.addEventListener('click',()=>{
+      const ok=b.dataset.answer==='income-salary';
+      $('#twinOptions button').forEach(x=>{x.disabled=true;x.classList.remove('correct','wrong')});
+      b.classList.add(ok?'correct':'wrong');
+      $('#twinOptions [data-answer="income-salary"]').classList.add('correct');
+      $('#vifValue').textContent=ok?'12.4':'2.1';
+      $('#vifFill').style.width=ok?'86%':'24%';
+      setFeedback($('#vifFeedback'),ok,ok
+        ? 'Верно. Годовой доход и месячная зарплата почти измеряют одно и то же, поэтому вместе могут сильно дублировать информацию.'
+        : 'Эта пара может быть связана, но не настолько прямолинейно. Ищи две переменные, которые почти являются разными единицами одной и той же величины.');
+      if(ok) complete(13);
+    }));
+  }
+
+  function initResearch(){
+    $('#researchPool button').forEach(b=>b.addEventListener('click',()=>{
+      state.selectedResearchVar=b.dataset.var;
+      $('#researchPool button').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+      $('#researchHint').textContent='Выбрано: '+b.textContent+'. Теперь назначь роль.';
+    }));
+    $('#research .research-slots button').forEach(slot=>slot.addEventListener('click',()=>{
+      if(!state.selectedResearchVar){ toast('Сначала выбери переменную сверху'); return; }
+      const key=slot.dataset.slot;
+      state.researchAssignments[key]=state.selectedResearchVar;
+      const src=$('#researchPool [data-var="'+state.selectedResearchVar+'"]');
+      slot.classList.add('filled');
+      slot.querySelector('strong').textContent=src?src.textContent:state.selectedResearchVar;
+      state.selectedResearchVar=null;
+      $('#researchPool button').forEach(x=>x.classList.remove('selected'));
+      $('#researchHint').textContent='Хорошо. Назначь следующую роль.';
+    }));
+    $('#checkResearch').addEventListener('click',()=>{
+      const a=state.researchAssignments;
+      const ok=a.y==='exam'&&a.x==='study'&&(a.control==='sleep'||a.control==='year');
+      setFeedback($('#researchFeedback'),ok,ok
+        ? 'Модель логична: результат экзамена — Y, часы подготовки — главный X, а сон или курс — разумный контроль. Это уже мышление исследователя.'
+        : 'Собери модель по вопросу: результат экзамена должен быть Y, часы подготовки — главным X. Для контроля лучше взять сон или курс обучения, а не любимый кофе.');
+      if(ok) complete(14);
+    });
+  }
+
+  function initBeginnerMode(){
+    document.body.classList.add('simple-mode');
+    $('#simpleModeToggle').addEventListener('click',()=>{
+      const on=!document.body.classList.contains('simple-mode');
+      document.body.classList.toggle('simple-mode',on);
+      $('#simpleModeToggle').setAttribute('aria-pressed',on?'true':'false');
+      $('#simpleModeToggle').textContent='Объяснять совсем просто: '+(on?'ВКЛ':'ВЫКЛ');
+    });
+    $('[data-term]').forEach(b=>b.addEventListener('click',()=>{
+      const t=glossary[b.dataset.term];
+      if(!t) return;
+      $('#termTitle').textContent=t.title;
+      $('#termText').textContent=t.text;
+      $('#termPopover').classList.add('show');
+    }));
+    $('#closeTerm').addEventListener('click',()=>$('#termPopover').classList.remove('show'));
+  }
+
   const quizBank = [
     {q:'В модели Ŷ = 10 + 2X чему равен прогноз при X = 4?',a:['12','18','24','40'],right:1,why:'10 + 2×4 = 18.'},
     {q:'Что минимизирует обычный МНК (OLS)?',a:['Сумму абсолютных X','Сумму квадратов остатков','Число коэффициентов','R²'],right:1,why:'OLS выбирает коэффициенты, минимизирующие сумму квадратов остатков.'},
@@ -624,6 +807,16 @@
     newResidualGame();
     newDiag();
     newDuel();
+    renderPredictionMachine();
+    $('#predictX').addEventListener('input',renderPredictionMachine);
+    $('#checkPrediction').addEventListener('click',checkPrediction);
+    initRolesGame();
+    initDummy();
+    initMultiple();
+    initP();
+    initVif();
+    initResearch();
+    initBeginnerMode();
   }
 
   document.addEventListener('DOMContentLoaded',init);
