@@ -1435,23 +1435,101 @@
     if(scroll && first) setTimeout(()=>first.scrollIntoView({behavior:'smooth',block:'start'}),180);
   }
 
+
   const quizBank = [
-    {q:'В модели Ŷ = 10 + 2X чему равен прогноз при X = 4?',a:['12','18','24','40'],right:1,why:'10 + 2×4 = 18.'},
-    {q:'Что минимизирует обычный МНК (OLS)?',a:['Сумму абсолютных X','Сумму квадратов остатков','Число коэффициентов','R²'],right:1,why:'OLS выбирает коэффициенты, минимизирующие сумму квадратов остатков.'},
-    {q:'β₁ = −3. Какое чтение корректно?',a:['X объясняет 3% Y','При +1 к X прогноз Y в среднем меняется на −3','Y всегда падает на 3','R² = −3'],right:1,why:'Коэффициент наклона — изменение прогнозируемого Y при увеличении X на одну единицу.'},
-    {q:'R² = 0,72. Что это означает в рамках модели?',a:['72% наблюдений предсказаны точно','Модель объясняет 72% вариации Y в данной выборке','Причинность доказана на 72%','Ошибка модели равна 28 единицам'],right:1,why:'R² описывает долю вариации Y, объясняемую моделью в рассматриваемых данных.'},
-    {q:'На графике остатков видна чёткая U-образная дуга. Самая вероятная проблема?',a:['Нелинейность спецификации','Идеальная модель','Слишком высокий R²','Dummy-переменная'],right:0,why:'Систематическая форма в остатках — сигнал пропущенной структуры; дуга часто указывает на нелинейность.'},
-    {q:'Dummy-переменная принимает 0/1. Её коэффициент обычно интерпретируют как…',a:['Среднюю разницу с базовой категорией при прочих равных','Вероятность ошибки','Количество категорий','R² категории'],right:0,why:'Коэффициент dummy показывает сдвиг относительно опорной категории при прочих равных.'},
-    {q:'Добавили много слабых предикторов. Что обязательно НЕ следует из роста обычного R²?',a:['Что модель стала лучше прогнозировать новые данные','Что R² не уменьшился','Что модель стала сложнее','Что появились новые коэффициенты'],right:0,why:'Train R² обычно не падает от новых предикторов, но качество на новых данных может ухудшиться.'},
-    {q:'Остаток для наблюдения — это…',a:['X − среднее X','Наблюдаемый Y − предсказанный Y','β₀ + β₁','R² − 1'],right:1,why:'eᵢ = yᵢ − ŷᵢ.'},
-    {q:'Что верно про корреляцию/регрессионную связь и причинность?',a:['Сильная связь автоматически доказывает причинность','Причинный вывод требует дополнительного дизайна и допущений','β₁ всегда причинный эффект','R² выше 0,5 доказывает причинность'],right:1,why:'Наблюдаемая ассоциация сама по себе не устанавливает причинный эффект.'},
-    {q:'Если точка далеко от основной массы по X, она может иметь высокий…',a:['leverage','intercept','sample size','dummy'],right:0,why:'Экстремальное положение по пространству предикторов связано с высоким leverage.'},
-    {q:'В множественной регрессии фраза «при прочих равных» означает…',a:['Остальные включённые предикторы считаются фиксированными','Все наблюдения равны','R² фиксирован','Ошибки равны нулю'],right:0,why:'Частный коэффициент описывает изменение Y по X при фиксированных остальных включённых переменных.'},
-    {q:'Что лучше использовать для сравнения прогноза на новых данных?',a:['Только train R²','Test RMSE','Только число переменных','Знак β₀'],right:1,why:'Метрика на отложенных данных напрямую оценивает ошибку вне обучающей выборки.'}
+    {type:'number',kind:'Расчёт',q:'Модель: Ŷ = 10 + 2X. Чему равен прогноз при X = 4?',answer:18,tolerance:0,why:'Сначала 2×4 = 8, затем 10+8 = 18.'},
+    {type:'choice',kind:'OLS',q:'Что именно минимизирует обычный МНК (OLS)?',a:['Сумму абсолютных значений X','Сумму квадратов остатков','Количество переменных','R²'],right:1,why:'OLS выбирает коэффициенты так, чтобы сумма квадратов вертикальных ошибок была минимальной.'},
+    {type:'choice',kind:'Коэффициент',q:'β₁ = −3. Какое чтение корректно?',a:['X объясняет 3% Y','При +1 к X прогноз Y в среднем меняется на −3','Y всегда падает ровно на 3','R² = −3'],right:1,why:'β₁ описывает среднее изменение прогнозируемого Y при увеличении X на одну единицу.'},
+    {type:'number',kind:'Остаток',q:'Факт Y = 78, прогноз Ŷ = 70. Чему равен остаток e = Y − Ŷ?',answer:8,tolerance:0,why:'78−70 = +8. Положительный знак означает, что факт выше прогноза.'},
+    {type:'choice',kind:'R²',q:'R² = 0,72. Что это означает?',a:['72% наблюдений предсказаны точно','Модель описывает около 72% вариации Y в этой выборке','Причинность доказана на 72%','Ошибка модели равна 28'],right:1,why:'R² — доля вариации Y, описанная моделью в данных.'},
+    {type:'scatter',kind:'График связи',q:'Посмотри на облако точек. Какое направление линейной связи здесь заметнее?',pattern:'positive',a:['Положительное','Отрицательное','Почти отсутствует'],right:0,why:'Облако в среднем поднимается слева направо.'},
+    {type:'scatter',kind:'График связи',q:'Какое направление линейной связи показано на графике?',pattern:'negative',a:['Положительное','Отрицательное','Почти отсутствует'],right:1,why:'При росте X значения Y в среднем снижаются.'},
+    {type:'residual',kind:'Диагностика',q:'Что показывает этот график остатков?',pattern:'nonlinear',a:['Нелинейность','Гетероскедастичность','Явной проблемы не видно'],right:0,why:'Дуга в остатках означает, что прямая линия пропускает криволинейную структуру.'},
+    {type:'residual',kind:'Диагностика',q:'Что показывает этот график остатков?',pattern:'hetero',a:['Нелинейность','Гетероскедастичность','Идеальную модель'],right:1,why:'Разброс ошибок увеличивается — это характерная воронка.'},
+    {type:'outlier',kind:'Выброс и leverage',q:'Какая точка потенциально имеет самый высокий leverage?',why:'Самая далёкая по X точка имеет наибольший рычаг влияния.'},
+    {type:'choice',kind:'Dummy',q:'Модель Ŷ = 50 + 8D, где D=0 для группы A и D=1 для группы B. Что означает коэффициент 8?',a:['Группа B в среднем выше группы A на 8 единиц','Группа B выше на 8%','Вероятность группы B равна 8','R² = 8'],right:0,why:'При переключении D с 0 на 1 прогноз увеличивается на 8 единиц Y.'},
+    {type:'number',kind:'Dummy',q:'В модели Ŷ = 50 + 8D чему равен прогноз для группы B, если D=1?',answer:58,tolerance:0,why:'50 + 8×1 = 58.'},
+    {type:'choice',kind:'Множественная регрессия',q:'Ŷ = 30 + 4·подготовка + 2·сон. Что означает коэффициент 4 при подготовке?',a:['При +1 часу подготовки прогноз выше на 4 при одинаковом сне','Нужно прибавлять 4+2=6','Сон не имеет значения','Это 4%'],right:0,why:'Другие включённые переменные мысленно фиксируются.'},
+    {type:'number',kind:'Множественная регрессия',q:'Ŷ = 30 + 4·подготовка + 2·сон. Подготовка = 3 часа, сон = 7 часов. Чему равен прогноз?',answer:56,tolerance:0,why:'30 + 4×3 + 2×7 = 30 + 12 + 14 = 56.'},
+    {type:'choice',kind:'p-value',q:'Исследователь получил p = 0,03. Какой вывод корректнее?',a:['Есть статистический сигнал против H₀ при α=0,05, но это не вероятность истинности эффекта','Эффект истинный с вероятностью 97%','Эффект причинный','R² равно 0,97'],right:0,why:'p-value относится к данным при H₀, а не к вероятности истинности эффекта.'},
+    {type:'choice',kind:'Мультиколлинеарность',q:'Какая пара сильнее всего рискует дублировать информацию?',a:['Возраст и доход','Рост и вес','Годовой доход и месячная зарплата','Регион и политический интерес'],right:2,why:'Годовой доход и месячная зарплата почти являются одной величиной в разных масштабах.'},
+    {type:'modeltable',kind:'Выбор модели',q:'Для прогноза новых данных выбери модель с лучшим test-качеством.',why:'При одинаковой задаче меньший test RMSE обычно означает более точный прогноз.'},
+    {type:'roles',kind:'Y / X / контроль',q:'Исследовательский вопрос: «Связаны ли часы подготовки с результатом экзамена, если учесть курс обучения?» Как распределить роли?',a:['Y=экзамен, X=подготовка, контроль=курс','Y=подготовка, X=экзамен, контроль=курс','Y=курс, X=подготовка, контроль=экзамен'],right:0,why:'Y — результат, X — главный интересующий фактор, курс — дополнительный контроль.'},
+    {type:'choice',kind:'Причинность',q:'Коэффициент подготовки положительный и статистически значимый. Что из этого НЕ следует автоматически?',a:['Есть положительная ассоциация в модели','Можно получить условный прогноз','Подготовка причинно повышает результат','Можно интерпретировать знак коэффициента'],right:2,why:'Обычная регрессия на наблюдательных данных сама по себе не доказывает причинность.'},
+    {type:'residualclick',kind:'Остатки',q:'Нажми на точку с самым большим по модулю остатком.',why:'Нужно искать самое длинное вертикальное расстояние между точкой и линией.'}
   ];
 
+  function quizScatterPoints(pattern){
+    const pts=[];
+    for(let i=0;i<24;i++){
+      const x=6+i*3.7;
+      let y;
+      if(pattern==='positive') y=18+.72*x+seededNoise(i+210)*13;
+      else y=92-.68*x+seededNoise(i+260)*13;
+      pts.push({x,y});
+    }
+    return pts;
+  }
+
+  function quizResidualPoints(pattern){
+    return Array.from({length:38},(_,i)=>{
+      const x=-3+i*6/37;
+      let y;
+      if(pattern==='nonlinear') y=5.2*(x*x-3)+seededNoise(i+320)*5;
+      else if(pattern==='hetero') y=seededNoise(i+360)*(4+(x+3)*3.4);
+      else y=seededNoise(i+400)*8;
+      return {x,y};
+    });
+  }
+
+  function renderQuizVisual(q){
+    const visual=$('#quizVisual');
+    visual.hidden=true;
+    visual.innerHTML='';
+    if(q.type==='scatter'){
+      visual.hidden=false;
+      const svg=svgEl('svg',{viewBox:'0 0 620 330'});
+      visual.append(svg);
+      const pts=quizScatterPoints(q.pattern);
+      drawScatter(svg,pts,{w:620,h:330,pad:42});
+    } else if(q.type==='residual'){
+      visual.hidden=false;
+      const svg=svgEl('svg',{viewBox:'0 0 620 330'});
+      visual.append(svg);
+      drawScatter(svg,quizResidualPoints(q.pattern),{w:620,h:330,pad:42,zeroY:0,fixed:{xmin:-3.3,xmax:3.3,ymin:-34,ymax:34}});
+    } else if(q.type==='outlier'){
+      visual.hidden=false;
+      const svg=svgEl('svg',{viewBox:'0 0 620 330'});
+      visual.append(svg);
+      const pts=Array.from({length:15},(_,i)=>({x:8+i*4,y:24+i*2.6+seededNoise(i+440)*7}));
+      pts.push({x:96,y:18,outlier:true,quizTarget:true});
+      drawScatter(svg,pts,{w:620,h:330,pad:42,fixed:{xmin:0,xmax:105,ymin:0,ymax:100}});
+      svg.querySelectorAll('circle').forEach((c,i)=>{c.style.cursor='pointer';c.addEventListener('click',()=>answerQuizPoint(i===pts.length-1,c,q));});
+    } else if(q.type==='modeltable'){
+      visual.hidden=false;
+      const models=[
+        {name:'A',r2:.64,rmse:21.4},
+        {name:'B',r2:.78,rmse:15.2,best:true},
+        {name:'C',r2:.89,rmse:18.7}
+      ];
+      visual.innerHTML='<div class="quiz-model-table">'+models.map((m,i)=>'<button type="button" data-model="'+i+'"><strong>Модель '+m.name+'</strong><span>R² train '+m.r2.toFixed(2)+'</span><span>RMSE test '+m.rmse.toFixed(1)+'</span></button>').join('')+'</div>';
+      visual.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>answerQuizModel(models[i],b,q)));
+    } else if(q.type==='residualclick'){
+      visual.hidden=false;
+      const svg=svgEl('svg',{viewBox:'0 0 620 330'});
+      visual.append(svg);
+      const pts=Array.from({length:20},(_,i)=>{const x=5+i*4.5;return {x,y:20+.7*x+seededNoise(i+500)*7};});
+      pts[13].y+=30;
+      const reg=regression(pts);
+      const residuals=pts.map(p=>Math.abs(p.y-(reg.b0+reg.b1*p.x)));
+      const target=residuals.indexOf(Math.max(...residuals));
+      drawScatter(svg,pts,{w:620,h:330,pad:42,line:reg,residuals:true,clickable:true});
+      svg.querySelectorAll('circle').forEach((c,i)=>c.addEventListener('click',()=>answerQuizPoint(i===target,c,q)));
+    }
+  }
+
   function startQuiz() {
-    state.quiz = {active:true,index:0,score:0,locked:false,order:shuffle(quizBank).slice(0,10)};
+    state.quiz = {active:true,index:0,score:0,locked:false,order:[...quizBank],attempts:0};
     $('#quizStart').style.display = 'none';
     $('#quizNext').disabled = true;
     renderQuiz();
@@ -1459,66 +1537,134 @@
 
   function renderQuiz() {
     const q = state.quiz.order[state.quiz.index];
-    $('#quizCounter').textContent = 'Вопрос ' + (state.quiz.index+1) + ' / 10';
+    const total=state.quiz.order.length;
+    $('#quizCounter').textContent = 'Задание ' + (state.quiz.index+1) + ' / ' + total;
     $('#quizScore').textContent = state.quiz.score;
-    $('#quizProgressFill').style.width = (state.quiz.index*10) + '%';
+    $('#quizProgressFill').style.width = (state.quiz.index/total*100) + '%';
     $('#quizQuestion').textContent = q.q;
-    const box = $('#quizAnswers');
-    box.innerHTML = '';
-    q.a.forEach((text,i) => {
-      const b = document.createElement('button');
-      b.textContent = text;
-      b.addEventListener('click', () => answerQuiz(i,b));
-      box.append(b);
-    });
-    $('#quizFeedback').textContent = '';
-    $('#quizFeedback').className = 'feedback dark-feedback';
-    state.quiz.locked = false;
+    $('#quizKind').textContent=q.kind||'Практика';
+    $('#quizAttempts').textContent='Попытки: 0';
+    $('#quizAnswers').innerHTML = '';
+    $('#quizInputZone').innerHTML='';
+    $('#quizInputZone').hidden=true;
+    $('#quizVisual').hidden=true;
+    $('#quizVisual').innerHTML='';
     state.quiz.attempts = 0;
     $('#quizNext').disabled = true;
+
+    if(q.type==='choice' || q.type==='scatter' || q.type==='residual' || q.type==='roles'){
+      const box=$('#quizAnswers');
+      q.a.forEach((text,i)=>{
+        const b=document.createElement('button');
+        b.textContent=text;
+        b.addEventListener('click',()=>answerQuiz(i,b));
+        box.append(b);
+      });
+    } else if(q.type==='number'){
+      const zone=$('#quizInputZone');
+      zone.hidden=false;
+      zone.innerHTML='<div class="quiz-number-box"><input id="quizNumberInput" inputmode="decimal" placeholder="Введите число"><button class="btn electric" id="quizNumberCheck" type="button">Проверить</button></div>';
+      $('#quizNumberCheck').addEventListener('click',()=>answerQuizNumber(q));
+      $('#quizNumberInput').addEventListener('keydown',e=>{if(e.key==='Enter') answerQuizNumber(q);});
+    }
+    renderQuizVisual(q);
+    $('#quizFeedback').textContent = '';
+    $('#quizFeedback').className = 'feedback dark-feedback';
   }
 
   function answerQuiz(i,btn) {
-    if (!state.quiz.active) return;
+    if (!state.quiz.active || !$('#quizNext').disabled) return;
     const q = state.quiz.order[state.quiz.index], ok = i === q.right;
     state.quiz.attempts=(state.quiz.attempts||0)+1;
+    $('#quizAttempts').textContent='Попытки: '+state.quiz.attempts;
     btn.classList.remove('correct','wrong');
     btn.classList.add(ok ? 'correct' : 'wrong');
     if(ok){
       state.quiz.score++;
       $('#quizScore').textContent = state.quiz.score;
       $$('#quizAnswers button').forEach(b=>b.disabled=true);
-      setFeedback($('#quizFeedback'),true,'Попытка '+state.quiz.attempts+'. Верно. '+q.why);
+      setFeedback($('#quizFeedback'),true,'Верно. '+q.why);
       $('#quizNext').disabled = false;
     } else {
-      setFeedback($('#quizFeedback'),false,'Попытка '+state.quiz.attempts+'. Пока нет. '+q.why+' Попробуй другой вариант — вопрос остаётся открытым.');
-      $('#quizNext').disabled = true;
+      setFeedback($('#quizFeedback'),false,'Пока нет. '+q.why+' Попробуй ещё раз — правильный вариант не раскрывается заранее.');
+    }
+  }
+
+  function answerQuizNumber(q){
+    if(!$('#quizNext').disabled) return;
+    const input=$('#quizNumberInput');
+    const raw=String(input.value).trim().replace(',','.');
+    const value=Number(raw);
+    state.quiz.attempts=(state.quiz.attempts||0)+1;
+    $('#quizAttempts').textContent='Попытки: '+state.quiz.attempts;
+    const ok=Number.isFinite(value)&&Math.abs(value-q.answer)<=q.tolerance;
+    if(ok){
+      state.quiz.score++; $('#quizScore').textContent=state.quiz.score;
+      input.disabled=true; $('#quizNumberCheck').disabled=true;
+      setFeedback($('#quizFeedback'),true,'Верно. '+q.why);
+      $('#quizNext').disabled=false;
+    } else {
+      setFeedback($('#quizFeedback'),false,'Пока неверно. '+q.why+' Пересчитай и попробуй снова.');
+      input.select();
+    }
+  }
+
+  function answerQuizPoint(ok,el,q){
+    if(!$('#quizNext').disabled) return;
+    state.quiz.attempts=(state.quiz.attempts||0)+1;
+    $('#quizAttempts').textContent='Попытки: '+state.quiz.attempts;
+    if(ok){
+      state.quiz.score++; $('#quizScore').textContent=state.quiz.score;
+      el.setAttribute('r','10');
+      el.style.fill='#6dff9a';
+      setFeedback($('#quizFeedback'),true,'Верно. '+q.why);
+      $('#quizNext').disabled=false;
+    } else {
+      el.style.opacity='.25';
+      setFeedback($('#quizFeedback'),false,'Не эта точка. '+q.why+' Попробуй другую.');
+    }
+  }
+
+  function answerQuizModel(model,btn,q){
+    if(!$('#quizNext').disabled) return;
+    state.quiz.attempts=(state.quiz.attempts||0)+1;
+    $('#quizAttempts').textContent='Попытки: '+state.quiz.attempts;
+    if(model.best){
+      state.quiz.score++; $('#quizScore').textContent=state.quiz.score;
+      btn.classList.add('correct');
+      $('#quizVisual').querySelectorAll('button').forEach(b=>b.disabled=true);
+      setFeedback($('#quizFeedback'),true,'Верно. '+q.why);
+      $('#quizNext').disabled=false;
+    }else{
+      btn.classList.add('wrong');
+      setFeedback($('#quizFeedback'),false,'Эта модель ошибается на test сильнее. '+q.why+' Сравни RMSE ещё раз.');
     }
   }
 
   function nextQuiz() {
     if (!state.quiz.active) return;
-    if (state.quiz.index < 9) {
+    const total=state.quiz.order.length;
+    if (state.quiz.index < total-1) {
       state.quiz.index++;
       renderQuiz();
       return;
     }
     $('#quizProgressFill').style.width = '100%';
     $('#quizCounter').textContent = 'Финиш';
-    $('#quizQuestion').textContent = 'Результат: ' + state.quiz.score + ' из 10';
+    $('#quizKind').textContent='Курс пройден';
+    $('#quizAttempts').textContent='';
+    $('#quizQuestion').textContent = 'Ты решил все ' + total + ' заданий';
     $('#quizAnswers').innerHTML = '';
-    const msg = state.quiz.score >= 8
-      ? 'Сильный результат. Базовая логика регрессии собрана в систему.'
-      : state.quiz.score >= 5
-      ? 'Основа есть. Ошибки выше показывают, какие темы стоит повторить.'
-      : 'Лучше пройти лаборатории ещё раз: особенно коэффициенты, остатки и диагностику.';
-    setFeedback($('#quizFeedback'),state.quiz.score >= 8,msg);
+    $('#quizVisual').hidden=true;
+    $('#quizInputZone').hidden=true;
+    setFeedback($('#quizFeedback'),true,'Финальный практикум завершён. Все задания были решены правильно, потому что переход дальше возможен только после верного ответа.');
     $('#quizNext').disabled = true;
     $('#quizStart').style.display = 'inline-flex';
-    $('#quizStart').textContent = 'Пройти ещё раз';
+    $('#quizStart').textContent = 'Пройти 20 заданий ещё раз';
     state.quiz.active = false;
     complete(16);
   }
+
 
   function launchConfetti() {
     const canvas = $('#confetti'), ctx = canvas.getContext('2d');
