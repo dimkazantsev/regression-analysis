@@ -651,6 +651,7 @@
   }
 
   function newDuel() {
+    resetAttempts(7);
     const best = rnd(14,19), mid = best+rnd(2.2,4.8), worst = mid+rnd(1.3,3.6);
     state.duelModels = shuffle([
       {name:'Модель A',vars:2,r2:rnd(.53,.64),adj:rnd(.51,.62),rmse:worst},
@@ -660,9 +661,19 @@
     const box = $('#modelCards');
     box.innerHTML = '';
     state.duelModels.forEach(m => {
-      const el = document.createElement('article');
-      el.className = 'card model-card';
-      el.innerHTML = '<div class="card-kicker">'+m.vars+' предикторов</div><h3>'+m.name+'</h3><div class="model-metrics"><div><span>R² train</span><strong>'+m.r2.toFixed(2)+'</strong></div><div><span>Adj. R²</span><strong>'+m.adj.toFixed(2)+'</strong></div><div><span>RMSE test</span><strong>'+m.rmse.toFixed(1)+'</strong></div></div>';
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'card model-card model-answer';
+      el.setAttribute('aria-label','Выбрать '+m.name);
+      el.innerHTML =
+        '<div class="model-select-label">Нажми, чтобы выбрать</div>'+
+        '<div class="card-kicker">'+m.vars+' предикторов</div>'+
+        '<h3>'+m.name+'</h3>'+
+        '<div class="model-metrics">'+
+          '<div><span>R² train</span><strong>'+m.r2.toFixed(2)+'</strong></div>'+
+          '<div><span>Adj. R²</span><strong>'+m.adj.toFixed(2)+'</strong></div>'+
+          '<div><span>RMSE test</span><strong>'+m.rmse.toFixed(1)+'</strong></div>'+
+        '</div>';
       el.addEventListener('click', () => answerDuel(m,el));
       box.append(el);
     });
@@ -671,16 +682,30 @@
   }
 
   function answerDuel(m,el) {
-    $$$('.model-card').forEach(c => c.classList.remove('selected'));
+    const n=attempt(7);
+    $$('.model-card').forEach(c => c.classList.remove('selected','wrong-model'));
     el.classList.add('selected');
+
     if (m.best) {
-      $$('.model-card').forEach(c=>{c.style.pointerEvents='none';c.classList.add('locked-choice');});
+      $$('.model-card').forEach(c=>{
+        c.disabled=true;
+        c.classList.add('locked-choice');
+      });
       el.classList.remove('locked-choice');
       el.classList.add('selected','correct-model');
-      setFeedback($('#modelFeedback'),true,'Верно. Для поставленной цели — прогноз на новых данных — здесь ключевой ориентир: минимальный RMSE на test-наборе.');
+      setFeedback(
+        $('#modelFeedback'),
+        true,
+        practicePrefix(n)+'Верно. Для прогноза новых данных здесь лучше модель с самым маленьким RMSE test. У выбранной модели он минимален.'
+      );
       complete(7);
     } else {
-      setFeedback($('#modelFeedback'),false,'У этой модели тестовая ошибка выше. Высокий train R² сам по себе не гарантирует лучший прогноз вне обучающей выборки.');
+      el.classList.add('wrong-model');
+      setFeedback(
+        $('#modelFeedback'),
+        false,
+        practicePrefix(n)+'Пока нет. У этой модели RMSE test не самый маленький. Сравни именно строку RMSE test у всех трёх карточек и попробуй ещё раз.'
+      );
     }
   }
 
