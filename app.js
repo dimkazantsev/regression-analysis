@@ -50,6 +50,101 @@
   }
   function practicePrefix(n){ return 'Попытка '+n+'. '; }
 
+
+  function resetChapterExercise(chapter){
+    const ch=Number(chapter);
+    resetAttempts(ch);
+    if(ch===1){ newIntuition(); toast('Новый набор точек создан'); return; }
+    if(ch===2){
+      $('#b0Slider').value=20; $('#b1Slider').value=.5;
+      $('#lineFeedback').textContent=''; $('#lineFeedback').className='feedback dark-feedback';
+      initLineGame(); renderLineGame(); toast('Новая модель создана'); return;
+    }
+    if(ch===3){ newCoefficientTask(); toast('Новая задача на коэффициент'); return; }
+    if(ch===4){
+      state.outlierOn=false; renderOutlier();
+      clearChoiceGroup('#outlierAnswers button','#outlierFeedback');
+      toast('Эксперимент с выбросом сброшен'); return;
+    }
+    if(ch===5){ newResidualGame(); toast('Новый набор остатков'); return; }
+    if(ch===6){ newDiag(); toast('Новый диагностический график'); return; }
+    if(ch===7){ newDuel(); toast('Новая дуэль моделей'); return; }
+    if(ch===8){
+      $('#predictX').value=4; renderPredictionMachine();
+      $('#predictAnswer').value='';
+      $('#predictionFeedback').textContent=''; $('#predictionFeedback').className='feedback';
+      toast('Задание на прогноз сброшено'); return;
+    }
+    if(ch===9){
+      state.selectedRoleVar=null; state.roleAssignments={y:null,x:null,control:null};
+      document.querySelectorAll('#variableBank .variable-chip').forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('.role-slot').forEach(slot=>{
+        slot.classList.remove('filled');
+        const role=slot.dataset.role;
+        const labels={y:'Что предсказываем?',x:'Главный предиктор',control:'Контроль'};
+        slot.querySelector('strong').textContent=labels[role];
+      });
+      $('#selectedVariable').textContent='Сначала выбери карточку переменной.';
+      $('#rolesFeedback').textContent=''; $('#rolesFeedback').className='feedback';
+      toast('Роли очищены'); return;
+    }
+    if(ch===10){
+      document.querySelectorAll('.dummy-choice').forEach((x,i)=>x.classList.toggle('active',i===0));
+      $('#dummyPrediction').textContent='50';
+      clearChoiceGroup('#dummyAnswers button','#dummyFeedback');
+      toast('Новый раунд dummy-переменной'); return;
+    }
+    if(ch===11){
+      $('#studySlider').value=3; $('#sleepSlider').value=7; renderMultiple();
+      clearChoiceGroup('#multipleAnswers button','#multipleFeedback');
+      toast('Модель возвращена к началу'); return;
+    }
+    if(ch===12){
+      $('#pSlider').value=32; renderP();
+      clearChoiceGroup('#pAnswers button','#pFeedback');
+      toast('Новый раунд p-value'); return;
+    }
+    if(ch===13){
+      document.querySelectorAll('#twinOptions button').forEach(x=>{x.disabled=false;x.classList.remove('correct','wrong')});
+      $('#vifValue').textContent='?'; $('#vifFill').style.width='0';
+      $('#vifFeedback').textContent=''; $('#vifFeedback').className='feedback';
+      toast('Новый раунд VIF'); return;
+    }
+    if(ch===14){
+      state.selectedResearchVar=null; state.researchAssignments={y:null,x:null,control:null};
+      document.querySelectorAll('#researchPool button').forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('#research .research-slots button').forEach(slot=>{
+        slot.classList.remove('filled');
+        slot.querySelector('strong').textContent='?';
+      });
+      $('#researchHint').textContent='Выбери переменную, затем назначь ей роль.';
+      $('#researchFeedback').textContent=''; $('#researchFeedback').className='feedback dark-feedback';
+      toast('Исследовательская модель очищена'); return;
+    }
+    if(ch===15){
+      makeLabData();
+      clearChoiceGroup('#labConclusionAnswers button','#labConclusionFeedback');
+      toast('Новый набор данных создан'); return;
+    }
+    if(ch===16){ startQuiz(); toast('Новый финальный квиз'); return; }
+  }
+
+  function addPracticeRestartButtons(){
+    document.querySelectorAll('[data-chapter]').forEach(section=>{
+      const chapter=section.dataset.chapter;
+      const holder=section.classList.contains('chapter') ? section : section.querySelector('.chapter');
+      if(!holder || holder.querySelector('.practice-restart')) return;
+      const task=[...holder.children].find(x=>x.classList.contains('task-stage'));
+      if(!task) return;
+      const bar=document.createElement('div');
+      bar.className='practice-toolbar task-stage is-locked';
+      bar.innerHTML='<div><span>Тренировочный режим</span><strong>Ошибаться можно сколько угодно</strong><p>Неверный ответ не закрывает задание. После правильного ответа начни новый раунд.</p></div><button class="btn ghost practice-restart" type="button">↻ Новый раунд</button>';
+      holder.insertBefore(bar,task);
+      bar.querySelector('.practice-restart').addEventListener('click',()=>resetChapterExercise(chapter));
+      if(localStorage.getItem(NS+':lesson:'+chapter)==='1') bar.classList.remove('is-locked');
+    });
+  }
+
   function normal() {
     let u = 0, v = 0;
     while (!u) u = Math.random();
@@ -1491,6 +1586,7 @@
     updateProgress();
     initReveal();
     initLessonGates();
+    addPracticeRestartButtons();
     renderHero();
     newIntuition();
     initLineGame();
