@@ -312,7 +312,7 @@
     $('#masteryRing').style.setProperty('--p', (pct * 3.6) + 'deg');
     if (n === TOTAL) {
       $('#masteryTitle').textContent = 'Лаборатория пройдена.';
-      $('#masteryCopy').textContent = 'Все восемь механик завершены. Теперь можно сбросить прогресс и пройти задания заново с новыми данными.';
+      $('#masteryCopy').textContent = 'Все 16 учебных модулей завершены. Теперь можно сбросить прогресс и пройти задания заново с новыми данными.';
     } else if (n >= 5) {
       $('#masteryTitle').textContent = 'Уже видно системное понимание.';
       $('#masteryCopy').textContent = 'Осталось закрыть ' + (TOTAL - n) + ' раздел(а). Прогресс сохраняется локально в этом браузере.';
@@ -577,7 +577,10 @@
     drawScatter($('#residualChart'),pts,{
       w:900,h:480,line:reg,residuals:true,clickable:true,pad:55
     });
-    $$('#residualChart circle').forEach(c => c.addEventListener('click', () => answerResidual(Number(c.dataset.index),c)));
+    $('#residualChart circle').forEach(c => {
+      c.style.pointerEvents='auto';
+      c.addEventListener('click', () => answerResidual(Number(c.dataset.index),c));
+    });
     $('#residualFeedback').textContent = '';
     $('#residualFeedback').className = 'feedback';
   }
@@ -588,6 +591,7 @@
     if (i === state.residualTarget) {
       circle.setAttribute('r','9');
       circle.setAttribute('fill','#188342');
+      $('#residualChart circle').forEach(c=>{c.style.pointerEvents='none';});
       setFeedback($('#residualFeedback'),true,'Точно. Остаток — вертикальная разница между наблюдаемым Y и предсказанием линии.');
       complete(5);
     } else {
@@ -1933,11 +1937,11 @@
   function init() {
     bind();
     updateProgress();
-    restoreNextButtons();
     initReveal();
     initLessonGates();
     addPracticeRestartButtons();
     injectTaskGuides();
+    restoreNextButtons();
     renderHero();
     newIntuition();
     initLineGame();
