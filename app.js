@@ -363,6 +363,7 @@
     state.completed.add(String(chapter));
     localStorage.setItem(NS + ':completed', JSON.stringify([...state.completed]));
     updateProgress();
+    syncMobileMenuState();
     if (state.completed.size > before) toast('Раздел ' + chapter + ' пройден');
     showNextBlockButton(chapter);
     if (state.completed.size === TOTAL && before < TOTAL) launchConfetti();
@@ -1983,6 +1984,69 @@
     tick();
   }
 
+  function initMobileCourseMenu(){
+    const btn=$('#mobileCourseMenuBtn');
+    const menu=$('#mobileCourseMenu');
+    const backdrop=$('#mobileCourseMenuBackdrop');
+    const close=$('#mobileCourseMenuClose');
+    const topBtn=$('#mobileMenuTop');
+    if(!btn||!menu||!backdrop||!close) return;
+
+    const openMenu=()=>{
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden','false');
+      backdrop.hidden=false;
+      btn.setAttribute('aria-expanded','true');
+      document.body.classList.add('menu-open');
+      syncMobileMenuState();
+    };
+    const closeMenu=()=>{
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden','true');
+      backdrop.hidden=true;
+      btn.setAttribute('aria-expanded','false');
+      document.body.classList.remove('menu-open');
+    };
+
+    btn.addEventListener('click',()=>menu.classList.contains('open')?closeMenu():openMenu());
+    close.addEventListener('click',closeMenu);
+    backdrop.addEventListener('click',closeMenu);
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMenu(); });
+
+    menu.querySelectorAll('[data-chapter-link]').forEach(a=>{
+      a.addEventListener('click',e=>{
+        e.preventDefault();
+        const target=document.querySelector(a.getAttribute('href'));
+        closeMenu();
+        if(target) setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),80);
+      });
+    });
+
+    topBtn.addEventListener('click',()=>{
+      closeMenu();
+      setTimeout(()=>window.scrollTo({top:0,behavior:'smooth'}),80);
+    });
+
+    const observer=new IntersectionObserver(entries=>{
+      const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+      if(!visible) return;
+      const ch=visible.target.dataset.chapter;
+      menu.querySelectorAll('[data-chapter-link]').forEach(a=>a.classList.toggle('current',a.dataset.chapterLink===ch));
+    },{rootMargin:'-20% 0px -62% 0px',threshold:[0,.15,.35,.6]});
+    document.querySelectorAll('[data-chapter]').forEach(sec=>observer.observe(sec));
+    syncMobileMenuState();
+  }
+
+  function syncMobileMenuState(){
+    const menu=$('#mobileCourseMenu');
+    if(!menu) return;
+    const progress=$('#mobileMenuProgress');
+    if(progress) progress.textContent=state.completed.size+' / '+TOTAL;
+    menu.querySelectorAll('[data-chapter-link]').forEach(a=>{
+      a.classList.toggle('done',state.completed.has(String(a.dataset.chapterLink)));
+    });
+  }
+
   function bind() {
     $('#rhoSlider').addEventListener('input',renderHero);
     $('#noiseSlider').addEventListener('input',renderHero);
@@ -2021,6 +2085,7 @@
       localStorage.removeItem(NS+':completed');
       state.completed.clear();
       updateProgress();
+      syncMobileMenuState();
       toast('Прогресс сброшен');
     });
   }
@@ -2037,6 +2102,7 @@
   function init() {
     bind();
     updateProgress();
+    initMobileCourseMenu();
     initReveal();
     initLessonGates();
     addPracticeRestartButtons();
