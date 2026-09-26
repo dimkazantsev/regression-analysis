@@ -1152,10 +1152,34 @@
 
   function buildLessonPanel(chapter){
     const l=lessonContent[chapter], d=deepLessonContent[chapter];
+    const longLesson=(window.LONG_LESSONS||{})[chapter];
     if(!l) return '';
     const deepData=d||{simple:l.lead,real:l.example,why:'Этот материал нужен для правильного выполнения следующего задания.',steps:l.points.map(p=>p[1]),terms:l.points,lecture:l.points.slice(0,3).map(p=>p[1])};
+    const textbook = longLesson ? (
+      '<div class="textbook-block">'+
+        '<div class="textbook-head"><span class="pane-kicker">Полное объяснение</span><h4>'+longLesson.title+'</h4><p>Прочитай этот материал спокойно сверху вниз. Здесь специально нет ожидания, что ты уже знаешь математику или статистику.</p></div>'+
+        longLesson.sections.map((sec,i)=>
+          '<section class="textbook-section">'+
+            '<div class="textbook-section-num">'+String(i+1).padStart(2,'0')+'</div>'+
+            '<div><h5>'+sec.heading+'</h5>'+
+              sec.paragraphs.map(p=>'<p>'+p+'</p>').join('')+
+            '</div>'+
+          '</section>'
+        ).join('')+
+        '<div class="formula-school">'+
+          '<span class="pane-kicker">Разбираем запись</span>'+
+          '<div class="formula-school-expression">'+longLesson.formula.expression+'</div>'+
+          '<p>'+longLesson.formula.explanation+'</p>'+
+        '</div>'+
+        '<div class="remember-box"><span class="pane-kicker">Что запомнить перед заданием</span><ul>'+
+          longLesson.remember.map(x=>'<li>'+x+'</li>').join('')+
+        '</ul></div>'+
+      '</div>'
+    ) : '';
+
     return '<div class="lesson-gate" data-lesson="'+chapter+'">'+
       '<div class="lesson-top"><div><span class="lesson-label">Сначала разберёмся</span><h3>'+l.title+'</h3><p>'+l.lead+'</p></div><div class="lesson-status">Теория перед заданием</div></div>'+
+      textbook+
       '<div class="lesson-body">'+
         '<div class="lesson-visual">'+lessonVisual(l.visual)+'</div>'+
         '<div class="lesson-concepts">'+l.points.map((p,i)=>'<article><span>0'+(i+1)+'</span><div><strong>'+p[0]+'</strong><p>'+p[1]+'</p></div></article>').join('')+'</div>'+
