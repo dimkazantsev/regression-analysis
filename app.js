@@ -838,12 +838,6 @@
 
   function initBeginnerMode(){
     document.body.classList.add('simple-mode');
-    $('#simpleModeToggle').addEventListener('click',()=>{
-      const on=!document.body.classList.contains('simple-mode');
-      document.body.classList.toggle('simple-mode',on);
-      $('#simpleModeToggle').setAttribute('aria-pressed',on?'true':'false');
-      $('#simpleModeToggle').textContent='Объяснять совсем просто: '+(on?'ВКЛ':'ВЫКЛ');
-    });
     document.querySelectorAll('[data-term]').forEach(b=>b.addEventListener('click',()=>{
       const t=glossary[b.dataset.term];
       if(!t) return;
@@ -853,7 +847,6 @@
     }));
     $('#closeTerm').addEventListener('click',()=>$('#termPopover').classList.remove('show'));
   }
-
 
   let labData = [];
 
@@ -967,6 +960,49 @@
     }));
   }
 
+
+  const taskInstructions = {
+    1:{title:'Определи направление связи',steps:['Посмотри на всё облако точек целиком, а не на отдельные точки.','Представь линию через середину облака.','Выбери: она в среднем идёт вверх, вниз или почти горизонтально.']},
+    2:{title:'Подгони линию OLS',steps:['Двигай β₀ — линия будет подниматься и опускаться.','Двигай β₁ — изменится наклон линии.','Следи за красными вертикальными остатками и SSE.','Когда кажется, что ошибки минимальны, нажми «Проверить модель».']},
+    3:{title:'Переведи коэффициент на обычный язык',steps:['Сначала прочитай, что обозначают X и Y.','Посмотри на число при X.','Выбери фразу, где говорится о среднем изменении Y при +1 к X.','Не путай коэффициент с процентами, R² и причинностью.']},
+    4:{title:'Проверь влияние необычной точки',steps:['Сначала включи выброс переключателем.','Сравни β₁ до и после появления точки.','Посмотри, где точка находится по оси X.','После этого выбери объяснение, почему линия изменилась.']},
+    5:{title:'Нажми на точку с самым большим остатком',steps:['Красные пунктирные отрезки показывают вертикальные ошибки модели.','Ищи не самую высокую точку, а самый длинный вертикальный отрезок от точки до линии.','Нажми прямо на выбранную синюю точку.','Если ошибёшься, точка побледнеет, а искать можно дальше.']},
+    6:{title:'Поставь диагноз по остаткам',steps:['Сначала найди горизонтальную линию нуля.','Посмотри на форму всего облака ошибок.','Дуга намекает на нелинейность, воронка — на меняющийся разброс.','Выбери наиболее подходящий диагноз.']},
+    7:{title:'Выбери модель для новых данных',steps:['Сравни три карточки моделей.','Главная цель здесь — прогноз на новых данных.','Смотри прежде всего на RMSE test: меньше — лучше.','Нажми на карточку модели, которую считаешь лучшей.']},
+    8:{title:'Посчитай прогноз самостоятельно',steps:['Подставь указанное X в формулу.','Сначала выполни умножение.','Затем прибавь свободный член.','Введи только получившееся число и нажми «Проверить».']},
+    9:{title:'Разложи переменные по ролям',steps:['Сначала нажми на одну переменную слева.','Затем нажми на подходящую роль справа: Y, X или контроль.','Повтори для всех трёх переменных.','После заполнения ролей нажми «Проверить раскладку».']},
+    10:{title:'Сравни две dummy-группы',steps:['Нажимай 0 и 1 слева и наблюдай, как меняется прогноз.','Сравни прогноз группы A и группы B.','Разница между прогнозами подсказывает смысл коэффициента +8.','После этого выбери правильную интерпретацию справа.']},
+    11:{title:'Примени правило «при прочих равных»',steps:['Подвигай оба ползунка и посмотри, как собирается прогноз.','В самом вопросе мысленно зафиксируй сон.','Измени только подготовку на 1 час.','Выбери, насколько изменится прогноз.']},
+    12:{title:'Отдели p-value от мифов',steps:['Подвигай p-value и посмотри, как он сравнивается с порогом 0,05.','Прочитай высказывание исследователя.','Реши, действительно ли p=0,03 означает 97% вероятности истинности эффекта.','Выбери ответ и прочитай объяснение.']},
+    13:{title:'Найди переменные-близнецы',steps:['Посмотри на пары признаков.','Ищи пару, которая почти измеряет одно и то же в разных единицах.','Нажми на выбранную пару.','После ответа посмотри, как меняется условный VIF.']},
+    14:{title:'Собери исследовательскую модель',steps:['Выбери переменную сверху.','Назначь ей роль Y, X или контроля.','Y должен отвечать на вопрос «что объясняем?».','Когда модель собрана, нажми «Запустить проверку».']},
+    15:{title:'Запусти мини-регрессию и прочитай результат',steps:['Выбери Y, главный X и при необходимости контроль.','Нажми «Запустить регрессию».','Сначала прочитай R², затем коэффициенты и график остатков.','В конце найди вывод, который нельзя делать по такой модели.']},
+    16:{title:'Реши 20 смешанных задач',steps:['Каждый новый запуск создаёт новый вариант квиза.','Внутри одного вопроса условие не меняется, пока ты ищешь ответ.','Неверная попытка даёт только направление, но не раскрывает готовое решение.','К следующей задаче можно перейти только после правильного ответа.']}
+  };
+
+  function buildTaskGuide(chapter){
+    const g=taskInstructions[chapter];
+    if(!g) return '';
+    return '<div class="task-instruction">'+
+      '<div class="task-instruction-icon">→</div>'+
+      '<div><span>Что нужно сделать</span><h4>'+g.title+'</h4><ol>'+g.steps.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>'+
+    '</div>';
+  }
+
+  function injectTaskGuides(){
+    document.querySelectorAll('[data-chapter]').forEach(section=>{
+      const chapter=section.dataset.chapter;
+      const holder=section.classList.contains('chapter')?section:section.querySelector('.chapter');
+      if(!holder || holder.querySelector('.task-instruction')) return;
+      const stages=[...holder.children].filter(x=>x.classList.contains('task-stage'));
+      const target=stages.find(x=>!x.classList.contains('practice-toolbar'));
+      if(!target) return;
+      target.insertAdjacentHTML('beforebegin',buildTaskGuide(chapter));
+      const guide=target.previousElementSibling;
+      guide.classList.add('task-stage');
+      if(target.classList.contains('is-locked')) guide.classList.add('is-locked');
+    });
+  }
 
   const lessonContent = {
     1:{
@@ -1375,11 +1411,6 @@
         '<div class="explain-pane" data-pane="real"><span class="pane-kicker">На реальной ситуации</span><p>'+deepData.real+'</p></div>'+
         '<div class="explain-pane" data-pane="why"><span class="pane-kicker">Практический смысл</span><p>'+deepData.why+'</p></div>'+
       '</div>'+
-      '<div class="microlecture">'+
-        '<div class="microlecture-head"><div><span class="pane-kicker">Анимированная мини-лекция</span><strong>Пройди идею за три шага</strong></div><button class="micro-play" type="button">▶ Показать</button></div>'+
-        '<div class="micro-screen"><span class="micro-step">1 / '+deepData.lecture.length+'</span><p>'+deepData.lecture[0]+'</p></div>'+
-        '<div class="micro-dots">'+deepData.lecture.map((_,i)=>'<button type="button" data-slide="'+i+'" class="'+(i===0?'active':'')+'" aria-label="Шаг '+(i+1)+'"></button>').join('')+'</div>'+
-      '</div>'+
       '<div class="lesson-deep-grid">'+
         '<div class="step-card"><span class="pane-kicker">Как думать по шагам</span><ol>'+deepData.steps.map(x=>'<li>'+x+'</li>').join('')+'</ol></div>'+
         '<div class="term-card"><span class="pane-kicker">Словарь этого экрана</span><div class="local-terms">'+deepData.terms.map(t=>'<details><summary>'+t[0]+'</summary><p>'+t[1]+'</p></details>').join('')+'</div></div>'+
@@ -1411,28 +1442,6 @@
         gate.querySelectorAll('.explain-tab').forEach(x=>x.classList.toggle('active',x===tab));
         gate.querySelectorAll('.explain-pane').forEach(x=>x.classList.toggle('active',x.dataset.pane===pane));
       }));
-
-      const slides=(deepLessonContent[chapter]?.lecture)||[];
-      let slideIndex=0, timer=null;
-      const screen=gate.querySelector('.micro-screen p');
-      const counter=gate.querySelector('.micro-step');
-      const play=gate.querySelector('.micro-play');
-      const renderSlide=(i)=>{
-        if(!slides.length) return;
-        slideIndex=(i+slides.length)%slides.length;
-        screen.textContent=slides[slideIndex];
-        counter.textContent=(slideIndex+1)+' / '+slides.length;
-        gate.querySelectorAll('.micro-dots button').forEach((b,j)=>b.classList.toggle('active',j===slideIndex));
-      };
-      gate.querySelectorAll('.micro-dots button').forEach(b=>b.addEventListener('click',()=>{
-        clearInterval(timer); timer=null; play.textContent='▶ Показать'; renderSlide(Number(b.dataset.slide));
-      }));
-      play.addEventListener('click',()=>{
-        if(timer){clearInterval(timer);timer=null;play.textContent='▶ Продолжить';return;}
-        play.textContent='❚❚ Пауза';
-        renderSlide(slideIndex);
-        timer=setInterval(()=>renderSlide(slideIndex+1),2400);
-      });
 
       const box=gate.querySelector('.readiness-box');
       const unlock=gate.querySelector('.lesson-unlock');
@@ -1860,6 +1869,7 @@
     initReveal();
     initLessonGates();
     addPracticeRestartButtons();
+    injectTaskGuides();
     renderHero();
     newIntuition();
     initLineGame();
