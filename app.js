@@ -20,7 +20,7 @@
     roleAssignments: {y:null,x:null,control:null},
     selectedResearchVar: null,
     researchAssignments: {y:null,x:null,control:null},
-    quiz: { active: false, index: 0, score: 0, locked: false, order: [] }
+    attempts: {}, quiz: { active: false, index: 0, score: 0, locked: false, order: [], attempts: 0 }
   };
 
   const $ = (s, root = document) => root.querySelector(s);
@@ -28,6 +28,27 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const rnd = (a, b) => a + Math.random() * (b - a);
   const fmt = (v, d = 2) => Number(v).toFixed(d).replace(/\.00$/, '');
+
+
+  function attempt(chapter){
+    state.attempts[chapter]=(state.attempts[chapter]||0)+1;
+    return state.attempts[chapter];
+  }
+  function resetAttempts(chapter){ state.attempts[chapter]=0; }
+  function clearChoiceGroup(selector, feedbackSelector){
+    document.querySelectorAll(selector).forEach(b=>{
+      b.disabled=false;
+      b.classList.remove('correct','wrong');
+      b.removeAttribute('aria-disabled');
+    });
+    const fb=$(feedbackSelector);
+    if(fb){ fb.textContent=''; fb.className='feedback'+(fb.classList.contains('dark-feedback')?' dark-feedback':''); }
+  }
+  function finishChoiceGroup(selector, rightBtn){
+    document.querySelectorAll(selector).forEach(b=>b.disabled=true);
+    if(rightBtn) rightBtn.classList.add('correct');
+  }
+  function practicePrefix(n){ return 'Попытка '+n+'. '; }
 
   function normal() {
     let u = 0, v = 0;
@@ -192,6 +213,7 @@
   }
 
   function newIntuition() {
+    resetAttempts(1);
     const types = ['positive','negative','none'];
     const truth = types[Math.floor(Math.random()*types.length)];
     state.intuitionTruth = truth;
@@ -211,17 +233,22 @@
   }
 
   function answerIntuition(btn) {
+    const n=attempt(1);
     const ok = btn.dataset.answer === state.intuitionTruth;
-    $$('#intuitionAnswers button').forEach(b => b.disabled = true);
+    btn.classList.remove('wrong','correct');
     btn.classList.add(ok ? 'correct':'wrong');
-    const right = $('#intuitionAnswers [data-answer="' + state.intuitionTruth + '"]');
-    if (right) right.classList.add('correct');
-    setFeedback(
-      $('#intuitionFeedback'),
-      ok,
-      ok ? 'Верно. Ты считал направление связи по облаку точек.' : 'Не совсем. Смотри на общий наклон облака, а не на отдельные точки.'
-    );
-    if (ok) complete(1);
+    if(ok){
+      finishChoiceGroup('#intuitionAnswers button',btn);
+      setFeedback($('#intuitionFeedback'),true,practicePrefix(n)+'Верно. Ты считал именно общий наклон облака точек. Отдельные точки могут отклоняться, но важна общая тенденция.');
+      complete(1);
+    } else {
+      const hints={
+        positive:'Ты выбрал рост Y вместе с X. Проверь: действительно ли правая часть облака в среднем выше левой?',
+        negative:'Ты выбрал снижение Y. Посмотри, идёт ли облако в целом сверху-слева вниз-вправо.',
+        none:'Ты выбрал отсутствие связи. Проверь, нет ли всё-таки заметного общего наклона облака.'
+      };
+      setFeedback($('#intuitionFeedback'),false,practicePrefix(n)+hints[btn.dataset.answer]+' Попробуй ещё раз — задание остаётся открытым.');
+    }
   }
 
   function initLineGame() {
@@ -297,6 +324,7 @@
   }
 
   function newCoefficientTask() {
+    resetAttempts(3);
     state.coefficientIndex = (state.coefficientIndex + 1) % coefficientTasks.length;
     const t = coefficientTasks[state.coefficientIndex];
     $('#coefficientFormula').textContent = t.formula;
@@ -315,19 +343,22 @@
   }
 
   function answerCoefficient(btn) {
+    const n=attempt(3);
     const ok = btn.dataset.ok === '1';
-    $$('#coefficientAnswers button').forEach(b => b.disabled = true);
+    btn.classList.remove('wrong','correct');
     btn.classList.add(ok ? 'correct' : 'wrong');
-    const right = $('#coefficientAnswers [data-ok="1"]');
-    if (right) right.classList.add('correct');
-    setFeedback(
-      $('#coefficientFeedback'),
-      ok,
-      ok
-        ? 'Да. Это интерпретация среднего изменения Y при увеличении X на одну единицу.'
-        : 'Нет. β₁ говорит о среднем изменении прогнозируемого Y при изменении X на одну единицу; он не равен R² и сам по себе не доказывает причинность.'
-    );
-    if (ok) complete(3);
+    if(ok){
+      finishChoiceGroup('#coefficientAnswers button',btn);
+      setFeedback($('#coefficientFeedback'),true,practicePrefix(n)+'Верно. Ты прочитал β₁ как среднее изменение прогнозируемого Y при увеличении X на одну единицу.');
+      complete(3);
+    } else {
+      const t=btn.textContent;
+      let why='Коэффициент при X нужно переводить в изменение прогнозируемого Y при +1 к X.';
+      if(t.includes('%')) why='Здесь коэффициент записан в обычных единицах, поэтому его нельзя автоматически превращать в проценты.';
+      else if(t.includes('обязательно')||t.includes('доказывает')) why='Регрессионная ассоциация не означает гарантированный индивидуальный результат и сама по себе не доказывает причинность.';
+      else if(t.includes('нулю')) why='β₀ описывает прогноз при X=0, но не гарантирует, что каждое наблюдение при X=0 будет ровно таким.';
+      setFeedback($('#coefficientFeedback'),false,practicePrefix(n)+why+' Выбери другой вариант.');
+    }
   }
 
   const cleanOutlierData = Array.from({length:26}, (_,i) => {
@@ -351,18 +382,20 @@
   }
 
   function answerOutlier(btn) {
+    const n=attempt(4);
     const ok = btn.dataset.answer === 'leverage';
-    $$('#outlierAnswers button').forEach(b => b.disabled = true);
+    btn.classList.remove('wrong','correct');
     btn.classList.add(ok ? 'correct' : 'wrong');
-    $('#outlierAnswers [data-answer="leverage"]').classList.add('correct');
-    setFeedback(
-      $('#outlierFeedback'),
-      ok,
-      ok
-        ? 'Верно. Наблюдение далеко от центра по X и способно сильно менять наклон линии.'
-        : 'Не так. Главная подсказка — экстремальное положение точки по оси X: это высокий leverage.'
-    );
-    if (ok) complete(4);
+    if(ok){
+      finishChoiceGroup('#outlierAnswers button',btn);
+      setFeedback($('#outlierFeedback'),true,practicePrefix(n)+'Верно. Точка находится далеко по X, поэтому имеет высокий leverage и способна заметно повернуть линию.');
+      complete(4);
+    } else {
+      const why=btn.dataset.answer==='r2'
+        ? 'R² вовсе не обязан становиться равным 1 из-за выброса. Выброс может даже ухудшить согласование модели с большинством точек.'
+        : 'Влиятельная точка может менять не только β₀. Если она далеко по X, она способна заметно изменить и наклон β₁.';
+      setFeedback($('#outlierFeedback'),false,practicePrefix(n)+why+' Сравни положение красной точки с остальным облаком и попробуй снова.');
+    }
   }
 
   function newResidualGame() {
@@ -401,6 +434,7 @@
   }
 
   function newDiag() {
+    resetAttempts(6);
     const types = ['ok','hetero','nonlinear'];
     state.diagType = types[Math.floor(Math.random()*types.length)];
     state.diagRound++;
@@ -426,21 +460,27 @@
   }
 
   function answerDiag(btn) {
+    const n=attempt(6);
     const ok = btn.dataset.answer === state.diagType;
-    $$('#diagAnswers button').forEach(b => b.disabled = true);
+    btn.classList.remove('wrong','correct');
     btn.classList.add(ok ? 'correct' : 'wrong');
-    $('#diagAnswers [data-answer="' + state.diagType + '"]').classList.add('correct');
     const explanations = {
-      ok:'Да. Случайное облако вокруг нулевой линии не показывает очевидной систематической структуры.',
-      hetero:'Да. Разброс остатков заметно меняется по X — это визуальный сигнал возможной гетероскедастичности.',
-      nonlinear:'Да. Систематическая дуга означает, что линейная форма не улавливает структуру зависимости.'
+      ok:'Верно. Точки выглядят как случайное облако вокруг нулевой линии, без заметной систематической формы.',
+      hetero:'Верно. Разброс остатков меняется по X — это визуальный сигнал возможной гетероскедастичности.',
+      nonlinear:'Верно. Систематическая дуга означает, что прямая линия не улавливает форму зависимости.'
     };
-    setFeedback(
-      $('#diagFeedback'),
-      ok,
-      ok ? explanations[state.diagType] : 'Посмотри не на отдельные точки, а на форму всего облака остатков.'
-    );
-    if (ok) complete(6);
+    if(ok){
+      finishChoiceGroup('#diagAnswers button',btn);
+      setFeedback($('#diagFeedback'),true,practicePrefix(n)+explanations[state.diagType]);
+      complete(6);
+    } else {
+      const why={
+        ok:'Если бы всё было приемлемо, облако выглядело бы примерно случайным вокруг нуля. Здесь проверь, нет ли заметной формы.',
+        hetero:'Гетероскедастичность похожа прежде всего на изменение ширины разброса — например, на воронку. Посмотри, именно это ли видно.',
+        nonlinear:'Нелинейность обычно выдаёт систематическую кривую или дугу в остатках. Посмотри, есть ли она.'
+      };
+      setFeedback($('#diagFeedback'),false,practicePrefix(n)+why[btn.dataset.answer]+' Другие варианты всё ещё доступны.');
+    }
   }
 
   function newDuel() {
@@ -556,13 +596,16 @@
     }));
     document.querySelectorAll('#dummyAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='diff';
-      document.querySelectorAll('#dummyAnswers button').forEach(x=>x.disabled=true);
-      b.classList.add(ok?'correct':'wrong');
-      $('#dummyAnswers [data-answer="diff"]').classList.add('correct');
-      setFeedback($('#dummyFeedback'),ok,ok
-        ? 'Верно. При D=0 прогноз 50, при D=1 — 58. Разница равна коэффициенту +8.'
-        : 'Нет. Здесь +8 — разница в единицах Y между группой 1 и базовой группой 0, а не проценты и не доказанная причинность.');
-      if(ok) complete(10);
+      const n=attempt(10);
+      b.classList.remove('correct','wrong'); b.classList.add(ok?'correct':'wrong');
+      if(ok){
+        finishChoiceGroup('#dummyAnswers button',b);
+        setFeedback($('#dummyFeedback'),true,practicePrefix(n)+'Верно. При D=0 прогноз 50, при D=1 — 58. Коэффициент +8 — это разница в единицах Y между группой 1 и базовой группой 0.');
+        complete(10);
+      } else {
+        const why=b.dataset.answer==='percent' ? 'Число +8 здесь задано в единицах Y, а не в процентах.' : 'Dummy показывает различие групп в модели, но сама по себе не доказывает, что принадлежность к группе вызвала это различие.';
+        setFeedback($('#dummyFeedback'),false,practicePrefix(n)+why+' Попробуй ещё раз.');
+      }
     }));
   }
 
@@ -579,13 +622,16 @@
     renderMultiple();
     document.querySelectorAll('#multipleAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='four';
-      document.querySelectorAll('#multipleAnswers button').forEach(x=>x.disabled=true);
-      b.classList.add(ok?'correct':'wrong');
-      $('#multipleAnswers [data-answer="four"]').classList.add('correct');
-      setFeedback($('#multipleFeedback'),ok,ok
-        ? 'Именно. Сон мысленно фиксируем на одном уровне, а подготовку увеличиваем на 1 час — прогноз меняется на +4.'
-        : 'Смысл коэффициента 4 как раз в сравнении при одинаковом сне: +1 час подготовки соответствует +4 к прогнозу.');
-      if(ok) complete(11);
+      const n=attempt(11);
+      b.classList.remove('correct','wrong'); b.classList.add(ok?'correct':'wrong');
+      if(ok){
+        finishChoiceGroup('#multipleAnswers button',b);
+        setFeedback($('#multipleFeedback'),true,practicePrefix(n)+'Верно. Сон фиксируем, а подготовку увеличиваем на 1 час. Поэтому прогноз меняется ровно на коэффициент при подготовке: +4.');
+        complete(11);
+      } else {
+        const why=b.dataset.answer==='six' ? 'Ты сложил коэффициенты 4 и 2. Но мы меняем только подготовку; сон остаётся тем же, поэтому его вклад не меняется.' : 'Сравнить можно именно благодаря правилу «при прочих равных»: сон фиксирован, меняется только подготовка.';
+        setFeedback($('#multipleFeedback'),false,practicePrefix(n)+why+' Попробуй другой ответ.');
+      }
     }));
   }
 
@@ -605,28 +651,32 @@
     renderP();
     document.querySelectorAll('#pAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='wrong';
-      document.querySelectorAll('#pAnswers button').forEach(x=>x.disabled=true);
-      b.classList.add(ok?'correct':'wrong');
-      $('#pAnswers [data-answer="wrong"]').classList.add('correct');
-      setFeedback($('#pFeedback'),ok,ok
-        ? 'Да. p-value не сообщает вероятность того, что эффект настоящий. Он относится к вероятности получить такие или более экстремальные данные при нулевой гипотезе и предпосылках теста.'
-        : 'Это распространённая ошибка. p=0,03 не означает 97% вероятности истинности эффекта.');
-      if(ok) complete(12);
+      const n=attempt(12);
+      b.classList.remove('correct','wrong'); b.classList.add(ok?'correct':'wrong');
+      if(ok){
+        finishChoiceGroup('#pAnswers button',b);
+        setFeedback($('#pFeedback'),true,practicePrefix(n)+'Верно. p-value относится к данным при условии H₀ и предпосылок теста; это не вероятность того, что эффект настоящий.');
+        complete(12);
+      } else {
+        setFeedback($('#pFeedback'),false,practicePrefix(n)+'Нет. p=0,03 нельзя превращать в «97% вероятности истинности эффекта». Вероятность в определении p-value относится к данным при H₀. Попробуй ещё раз.');
+      }
     }));
   }
 
   function initVif(){
     document.querySelectorAll('#twinOptions button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='income-salary';
-      document.querySelectorAll('#twinOptions button').forEach(x=>{x.disabled=true;x.classList.remove('correct','wrong')});
-      b.classList.add(ok?'correct':'wrong');
-      $('#twinOptions [data-answer="income-salary"]').classList.add('correct');
+      const n=attempt(13);
+      b.classList.remove('correct','wrong'); b.classList.add(ok?'correct':'wrong');
       $('#vifValue').textContent=ok?'12.4':'2.1';
       $('#vifFill').style.width=ok?'86%':'24%';
-      setFeedback($('#vifFeedback'),ok,ok
-        ? 'Верно. Годовой доход и месячная зарплата почти измеряют одно и то же, поэтому вместе могут сильно дублировать информацию.'
-        : 'Эта пара может быть связана, но не настолько прямолинейно. Ищи две переменные, которые почти являются разными единицами одной и той же величины.');
-      if(ok) complete(13);
+      if(ok){
+        finishChoiceGroup('#twinOptions button',b);
+        setFeedback($('#vifFeedback'),true,practicePrefix(n)+'Верно. Годовой доход и месячная зарплата почти измеряют одну величину в разных масштабах и поэтому сильно дублируют информацию.');
+        complete(13);
+      } else {
+        setFeedback($('#vifFeedback'),false,practicePrefix(n)+'Эта пара может быть связана, но не является почти прямым пересчётом одной и той же величины. Ищи наиболее очевидное дублирование и попробуй ещё раз.');
+      }
     }));
   }
 
@@ -776,13 +826,16 @@
     $('#runLabRegression').addEventListener('click',runLabRegression);
     document.querySelectorAll('#labConclusionAnswers button').forEach(b=>b.addEventListener('click',()=>{
       const ok=b.dataset.answer==='causality';
-      document.querySelectorAll('#labConclusionAnswers button').forEach(x=>x.disabled=true);
-      b.classList.add(ok?'correct':'wrong');
-      $('#labConclusionAnswers [data-answer="causality"]').classList.add('correct');
-      setFeedback($('#labConclusionFeedback'),ok,ok
-        ? 'Верно. Положительный коэффициент показывает ассоциацию в модели, но сам по себе не доказывает причинный эффект.'
-        : 'Этот вывод допустим как описание модели. Ошибка — автоматически объявить найденную связь причинной.');
-      if(ok) complete(15);
+      const n=attempt(15);
+      b.classList.remove('correct','wrong'); b.classList.add(ok?'correct':'wrong');
+      if(ok){
+        finishChoiceGroup('#labConclusionAnswers button',b);
+        setFeedback($('#labConclusionFeedback'),true,practicePrefix(n)+'Верно. Это недопустимый вывод: положительный коэффициент показывает ассоциацию в модели, но сам по себе не доказывает причинный эффект.');
+        complete(15);
+      } else {
+        const why=b.dataset.answer==='association' ? 'Это допустимое описание: модель действительно показывает статистическую связь между X и Y.' : 'Это тоже допустимо: регрессионная формула действительно используется для получения условного среднего прогноза.';
+        setFeedback($('#labConclusionFeedback'),false,practicePrefix(n)+why+' Значит, ошибочный вывод другой. Пробуй снова.');
+      }
     }));
   }
 
@@ -1326,22 +1379,26 @@
     $('#quizFeedback').textContent = '';
     $('#quizFeedback').className = 'feedback dark-feedback';
     state.quiz.locked = false;
+    state.quiz.attempts = 0;
     $('#quizNext').disabled = true;
   }
 
   function answerQuiz(i,btn) {
-    if (state.quiz.locked) return;
-    state.quiz.locked = true;
+    if (!state.quiz.active) return;
     const q = state.quiz.order[state.quiz.index], ok = i === q.right;
-    if (ok) state.quiz.score++;
-    $('#quizScore').textContent = state.quiz.score;
-    $$('#quizAnswers button').forEach((b,j) => {
-      b.disabled = true;
-      if (j === q.right) b.classList.add('correct');
-    });
+    state.quiz.attempts=(state.quiz.attempts||0)+1;
+    btn.classList.remove('correct','wrong');
     btn.classList.add(ok ? 'correct' : 'wrong');
-    setFeedback($('#quizFeedback'),ok,(ok ? 'Верно. ' : 'Не совсем. ') + q.why);
-    $('#quizNext').disabled = false;
+    if(ok){
+      state.quiz.score++;
+      $('#quizScore').textContent = state.quiz.score;
+      $$('#quizAnswers button').forEach(b=>b.disabled=true);
+      setFeedback($('#quizFeedback'),true,'Попытка '+state.quiz.attempts+'. Верно. '+q.why);
+      $('#quizNext').disabled = false;
+    } else {
+      setFeedback($('#quizFeedback'),false,'Попытка '+state.quiz.attempts+'. Пока нет. '+q.why+' Попробуй другой вариант — вопрос остаётся открытым.');
+      $('#quizNext').disabled = true;
+    }
   }
 
   function nextQuiz() {
