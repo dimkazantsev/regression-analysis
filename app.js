@@ -2,7 +2,7 @@
   'use strict';
 
   const NS = 'regression-lab-v1';
-  const TOTAL = 15;
+  const TOTAL = 16;
   const state = {
     completed: new Set(JSON.parse(localStorage.getItem(NS + ':completed') || '[]')),
     intuitionTruth: 'positive',
@@ -491,7 +491,7 @@
     const v = Number(String($('#predictAnswer').value).replace(',','.'));
     if (v === 30){
       setFeedback($('#predictionFeedback'),true,'Верно. 12 + 3×6 = 30. Ты только что вручную сделал прогноз по регрессии.');
-      complete(15);
+      complete(16);
     } else {
       setFeedback($('#predictionFeedback'),false,'Почти. Сначала умножь коэффициент при X на значение X: 3×6=18. Затем добавь свободный член 12.');
     }
@@ -651,6 +651,116 @@
       $('#termPopover').classList.add('show');
     }));
     $('#closeTerm').addEventListener('click',()=>$('#termPopover').classList.remove('show'));
+  }
+
+
+  let labData = [];
+
+  function makeLabData(){
+    labData = Array.from({length:24},(_,i)=>{
+      const study = Math.max(0,Math.round((1.5 + (i%8)*.8 + normal()*1.2)*10)/10);
+      const sleep = Math.max(4,Math.min(9,Math.round((6.8 + normal()*.9)*10)/10));
+      const year = 1 + (i%4);
+      const exam = Math.round(38 + 4.6*study + 2.2*sleep + 1.4*year + normal()*6.5);
+      return {id:i+1,exam,study,sleep,year};
+    });
+    renderLabTable();
+    $('#labResults').hidden = true;
+    $('#labConclusionFeedback').textContent='';
+    $('#labConclusionAnswers button').forEach(b=>{b.disabled=false;b.classList.remove('correct','wrong')});
+  }
+
+  function renderLabTable(){
+    const body=$('#studentTable tbody');
+    body.innerHTML='';
+    labData.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML='<td>'+r.id+'</td><td>'+r.exam+'</td><td>'+r.study.toFixed(1)+'</td><td>'+r.sleep.toFixed(1)+'</td><td>'+r.year+'</td>';
+      body.append(tr);
+    });
+  }
+
+  function transpose(A){ return A[0].map((_,i)=>A.map(r=>r[i])); }
+  function matMul(A,B){ return A.map(r=>B[0].map((_,j)=>r.reduce((s,v,k)=>s+v*B[k][j],0))); }
+  function inv(M){
+    const n=M.length, A=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>i===j?1:0)]);
+    for(let i=0;i<n;i++){
+      let p=i;
+      for(let r=i+1;r<n;r++) if(Math.abs(A[r][i])>Math.abs(A[p][i])) p=r;
+      [A[i],A[p]]=[A[p],A[i]];
+      let d=A[i][i];
+      if(Math.abs(d)<1e-10) return null;
+      for(let j=0;j<2*n;j++) A[i][j]/=d;
+      for(let r=0;r<n;r++) if(r!==i){
+        const k=A[r][i];
+        for(let j=0;j<2*n;j++) A[r][j]-=k*A[i][j];
+      }
+    }
+    return A.map(r=>r.slice(n));
+  }
+
+  function multipleRegression(rows, yKey, xKeys){
+    const X=rows.map(r=>[1,...xKeys.map(k=>Number(r[k]))]);
+    const Y=rows.map(r=>[Number(r[yKey])]);
+    const Xt=transpose(X), XtX=matMul(Xt,X), invXtX=inv(XtX);
+    if(!invXtX) return null;
+    const beta=matMul(matMul(invXtX,Xt),Y).map(r=>r[0]);
+    const fitted=rows.map((r,i)=>X[i].reduce((s,v,j)=>s+v*beta[j],0));
+    const residuals=rows.map((r,i)=>Number(r[yKey])-fitted[i]);
+    const mean=rows.reduce((s,r)=>s+Number(r[yKey]),0)/rows.length;
+    const sse=residuals.reduce((s,e)=>s+e*e,0);
+    const sst=rows.reduce((s,r)=>s+(Number(r[yKey])-mean)**2,0);
+    return {beta,fitted,residuals,r2:1-sse/sst,rmse:Math.sqrt(sse/rows.length),xKeys};
+  }
+
+  function varLabel(k){
+    return {study:'Часы подготовки',sleep:'Часы сна',year:'Курс обучения',exam:'Результат экзамена'}[k]||k;
+  }
+
+  function runLabRegression(){
+    const y=$('#labY').value, x=$('#labX').value, c=$('#labControl').value;
+    if(c===x){
+      toast('Контроль не должен повторять главный X');
+      return;
+    }
+    const keys=[x,...(c==='none'?[]:[c])];
+    const m=multipleRegression(labData,y,keys);
+    if(!m){ toast('Эту модель сейчас нельзя посчитать'); return; }
+    $('#labResults').hidden=false;
+    $('#labR2').textContent=clamp(m.r2,0,1).toFixed(2);
+    $('#labR2Plain').textContent='Простыми словами: эта конкретная модель описывает примерно '+Math.round(clamp(m.r2,0,1)*100)+'% различий в результатах экзамена в нашем учебном наборе. Остальное остаётся за другими факторами и случайным шумом.';
+    const body=$('#labCoeffBody');
+    body.innerHTML='';
+    const intercept=document.createElement('tr');
+    intercept.innerHTML='<td>Константа</td><td>'+fmt(m.beta[0],2)+'</td><td>Базовый уровень прогноза, когда все X равны нулю. Иногда он содержательно интересен, иногда — нет.</td>';
+    body.append(intercept);
+    keys.forEach((k,i)=>{
+      const tr=document.createElement('tr');
+      const b=m.beta[i+1];
+      tr.innerHTML='<td>'+varLabel(k)+'</td><td>'+fmt(b,2)+'</td><td>При увеличении «'+varLabel(k)+'» на 1 единицу прогноз экзамена в среднем меняется на '+fmt(b,2)+' балла'+(keys.length>1?' при прочих включённых переменных равных.':'.')+'</td>';
+      body.append(tr);
+    });
+    const pts=m.residuals.map((e,i)=>({x:i+1,y:e}));
+    drawScatter($('#labResidualChart'),pts,{w:620,h:340,pad:42,zeroY:0,fixed:{xmin:0,xmax:25,ymin:-24,ymax:24}});
+    const mainB=m.beta[1];
+    $('#labNarrative').textContent='В учебной модели главный коэффициент для переменной «'+varLabel(x)+'» равен '+fmt(mainB,2)+'. Это означает: при увеличении этого X на одну единицу прогноз результата экзамена в среднем меняется примерно на '+fmt(mainB,2)+' балла'+(keys.length>1?' при фиксированном значении контроля «'+varLabel(c)+'».':'')+' R² модели равен '+clamp(m.r2,0,1).toFixed(2)+'. Это описание связи в данных, а не автоматическое доказательство причинности.';
+    $('#labResults').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function initDataLab(){
+    makeLabData();
+    $('#regenDataset').addEventListener('click',makeLabData);
+    $('#runLabRegression').addEventListener('click',runLabRegression);
+    $('#labConclusionAnswers button').forEach(b=>b.addEventListener('click',()=>{
+      const ok=b.dataset.answer==='causality';
+      $('#labConclusionAnswers button').forEach(x=>x.disabled=true);
+      b.classList.add(ok?'correct':'wrong');
+      $('#labConclusionAnswers [data-answer="causality"]').classList.add('correct');
+      setFeedback($('#labConclusionFeedback'),ok,ok
+        ? 'Верно. Положительный коэффициент показывает ассоциацию в модели, но сам по себе не доказывает причинный эффект.'
+        : 'Этот вывод допустим как описание модели. Ошибка — автоматически объявить найденную связь причинной.');
+      if(ok) complete(15);
+    }));
   }
 
   const quizBank = [
@@ -817,6 +927,7 @@
     initVif();
     initResearch();
     initBeginnerMode();
+    initDataLab();
   }
 
   document.addEventListener('DOMContentLoaded',init);
