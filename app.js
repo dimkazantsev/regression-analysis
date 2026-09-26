@@ -1934,6 +1934,15 @@
     });
   }
 
+  function safeInit(name,fn){
+    try{ fn(); }
+    catch(err){
+      console.error('[Regression Lab] Ошибка модуля '+name,err);
+      window.__regressionLabErrors=window.__regressionLabErrors||[];
+      window.__regressionLabErrors.push({name,error:String(err)});
+    }
+  }
+
   function init() {
     bind();
     updateProgress();
@@ -1942,25 +1951,28 @@
     addPracticeRestartButtons();
     injectTaskGuides();
     restoreNextButtons();
-    renderHero();
-    newIntuition();
-    initLineGame();
-    newCoefficientTask();
-    renderOutlier();
-    newResidualGame();
-    newDiag();
-    newDuel();
-    renderPredictionMachine();
-    $('#predictX').addEventListener('input',renderPredictionMachine);
-    $('#checkPrediction').addEventListener('click',checkPrediction);
-    initRolesGame();
-    initDummy();
-    initMultiple();
-    initP();
-    initVif();
-    initResearch();
-    initBeginnerMode();
-    initDataLab();
+
+    safeInit('hero',renderHero);
+    safeInit('1 · intuition',newIntuition);
+    safeInit('2 · OLS',initLineGame);
+    safeInit('3 · coefficients',newCoefficientTask);
+    safeInit('4 · outlier',renderOutlier);
+    safeInit('5 · residuals',newResidualGame);
+    safeInit('6 · diagnostics',newDiag);
+    safeInit('7 · model duel',newDuel);
+    safeInit('8 · prediction',()=>{
+      renderPredictionMachine();
+      $('#predictX').addEventListener('input',renderPredictionMachine);
+      $('#checkPrediction').addEventListener('click',checkPrediction);
+    });
+    safeInit('9 · roles',initRolesGame);
+    safeInit('10 · dummy',initDummy);
+    safeInit('11 · multiple',initMultiple);
+    safeInit('12 · p-value',initP);
+    safeInit('13 · VIF',initVif);
+    safeInit('14 · research',initResearch);
+    safeInit('glossary',initBeginnerMode);
+    safeInit('15 · data lab',initDataLab);
   }
 
   document.addEventListener('DOMContentLoaded',init);
